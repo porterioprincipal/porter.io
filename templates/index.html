@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Acceso - Portería</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f4; color: #333; }
+        input, select, button { padding: 12px; font-size: 16px; border-radius: 5px; outline: none; margin: 5px; }
+        input[type="text"] { width: 80%; max-width: 400px; border: 2px solid #007bff; }
+        select { border: 1px solid #ccc; width: 220px; cursor: pointer; background: white; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; width: 200px; margin-top: 15px; transition: 0.3s; }
+        button:hover { background-color: #0056b3; }
+        #resultado { margin-top: 30px; padding: 20px; background: white; border-radius: 8px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); min-width: 300px; }
+        .btn-historial { display: inline-block; margin-bottom: 20px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .formulario-destino { display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: inline-block;}
+        .badge-rol { background: #e9ecef; padding: 2px 8px; border-radius: 4px; font-size: 0.9em; text-transform: capitalize; }
+    </style>
+</head>
+<body>
+    <h1>Control de Acceso 🏢</h1>
+    
+    <div style="margin-bottom: 25px;">
+        <a href="/historial" class="btn-historial">📋 Ver Historial Central</a>
+        {% if rol_actual == 'administrador' %}
+            <a href="/admin" style="background: #ffc107; color: black; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-left: 10px;">⚙️ Panel Admin</a>
+        {% endif %}
+        <a href="/logout" style="color: #dc3545; text-decoration: none; font-weight: bold; margin-left: 15px;">🚪 Salir</a>
+    </div>
+
+    <p>Portero: <strong>{{ usuario_actual }}</strong> <span class="badge-rol">{{ rol_actual }}</span></p>
+    
+    <hr style="width: 50%; border: 0; border-top: 1px solid #ccc; margin: 20px auto;">
+
+    <div id="paso-escaner">
+        <p style="font-size: 1.2em;">1. Escanea la cédula del visitante</p>
+        <input type="text" id="escanerInput" placeholder="Esperando escáner..." autofocus autocomplete="off">
+    </div>
+
+    <div id="paso-apto" style="display: none;">
+        <p style="font-size: 1.2em;">2. Selecciona el destino</p>
+        <div class="formulario-destino">
+            <div>
+                <label for="unidadSelect"><strong>{{ session.get('nom_bloque', 'Unidad') }}:</strong></label>
+                <select id="unidadSelect"></select>
+            </div>
+            <div style="margin-top: 15px;">
+                <label for="subunidadSelect"><strong>{{ session.get('nom_unidad', 'Subunidad') }}:</strong></label>
+                <select id="subunidadSelect">
+                    <option value="">Seleccione {{ session.get('nom_bloque', 'Unidad') }} primero</option>
+                </select>
+            </div>
+            <button id="btnGuardar">Registrar Ingreso</button>
+            <button id="btnCancelar" style="background-color: #dc3545; margin-top: 10px;">Cancelar</button>
+        </div>
+    </div>
+    
+    <div id="resultado">
+        <h3>Último ingreso procesado:</h3>
+        <p id="info-registro" style="font-size: 18px; color: #333;">Esperando primer registro del turno...</p>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURACIÓN DINÁMICA DE NOMENCLATURA ---
+        const nomBloque = "{{ session.get('nom_bloque', 'Unidad') }}";
+        const nomUnidad = "{{ session.get('nom_unidad', 'Subunidad') }}";
+
+        const selectUnidad = document.getElementById('unidadSelect');
+        const selectSubunidad = document.getElementById('subunidadSelect');
+
+        // Cargar las Unidades (Antes Manzanas) al iniciar
+        function cargarUnidades() {
+            fetch('/api/unidades') // Nueva ruta API
+                .then(res => res.json())
+                .then(data => {
+                    selectUnidad.innerHTML = `<option value="">Seleccione ${nomBloque}...</option>`;
+                    data.forEach(u => {
+                        let op = new Option(u.nombre, u.id);
+                        selectUnidad.add(op);
+                    });
+                })
+                .catch(err => console.error("Error API Unidades:", err));
+        }
+
+        // Cargar las Subunidades (Antes Casas) al cambiar de unidad
+        selectUnidad.addEventListener('change', function() {
+            const unidadId = this.value;
+            selectSubunidad.innerHTML = `<option value="">Cargando ${nomUnidad}s...</option>`;
+            
+            if (!unidadId) {
+                selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`;
+                return;
+            }
+
+            fetch(`/api/subunidades/${unidadId}`) // Nueva ruta API
+                .then(res => res.json())
+                .then(data => {
+                    selectSubunidad.innerHTML = `<option value="">Seleccione ${nomUnidad}...</option>`;
+                    data.forEach(s => {
+                        let op = new Option(s.nombre, s.nombre);
+                        selectSubunidad.add(op);
+                    });
+                })
+                .catch(err => console.error("Error API Subunidades:", err));
+        });
+
+        // --- 2. LÓGICA DE INTERFAZ Y ESCÁNER ---
+        let tramaTemporal = "";
+        const pasoEscaner = document.getElementById('paso-escaner');
+        const inputEscaner = document.getElementById('escanerInput');
+        const pasoApto = document.getElementById('paso-apto');
+        const infoRegistro = document.getElementById('info-registro');
+
+        inputEscaner.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                tramaTemporal = inputEscaner.value;
+                if (tramaTemporal.trim() === "") return;
+                
+                pasoEscaner.style.display = 'none';
+                pasoApto.style.display = 'block';
+            }
+        });
+
+        document.getElementById('btnCancelar').addEventListener('click', reiniciarPantalla);
+
+        document.getElementById('btnGuardar').addEventListener('click', function() {
+            if (selectUnidad.value === "" || selectSubunidad.value === "") {
+                alert(`⚠️ Debes seleccionar ${nomBloque} y ${nomUnidad}.`);
+                return; 
+            }
+
+            const nombreUnidad = selectUnidad.options[selectUnidad.selectedIndex].text;
+            const destinoCompleto = `${nombreUnidad} - ${selectSubunidad.value}`;
+            
+            infoRegistro.innerHTML = "<b>⌛ Procesando en la nube...</b>";
+
+            fetch('/registrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trama: tramaTemporal, apartamento: destinoCompleto })
+            })
+            .then(res => res.json())
+            // Dentro del fetch('/registrar') ...
+.then(data => {
+    if(data.mensaje === "ok") {
+        infoRegistro.innerHTML = `
+            <div style="color: #28a745;">✅ <b>REGISTRO EXITOSO</b></div>
+            <b>Destino:</b> ${data.apartamento}<br>
+            <b>Cédula:</b> ${data.cedula}<br>
+            <b>Nombre:</b> ${data.nombre}
+        `;
+        reiniciarPantalla();
+    } else {
+        infoRegistro.innerText = "❌ Error: " + data.error;
+    }
+})
+            .catch(() => { infoRegistro.innerText = "❌ Error crítico de conexión"; });
+        });
+
+        function reiniciarPantalla() {
+            inputEscaner.value = '';
+            selectUnidad.selectedIndex = 0;
+            selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`; 
+            pasoApto.style.display = 'none';
+            pasoEscaner.style.display = 'block';
+            setTimeout(() => inputEscaner.focus(), 100);
+        }
+
+        // Foco automático inteligente
+        document.addEventListener('click', (e) => { 
+            if(pasoEscaner.style.display !== 'none' && !['A', 'SELECT', 'OPTION', 'INPUT'].includes(e.target.tagName)) {
+                inputEscaner.focus(); 
+            }
+        });
+
+        // Carga inicial
+        cargarUnidades();
+    </script>
+</body>
+</html>

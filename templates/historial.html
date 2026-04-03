@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Portería</title>
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 20px; }
+        .btn-volver { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
+        .btn-volver:hover { background: #5a6268; }
+        
+        table { width: 100% !important; border-collapse: collapse; margin-top: 20px; }
+        th { background-color: #343a40 !important; color: white !important; }
+        .badge-portero { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; color: #495057; border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📋 Historial de Ingresos</h1>
+    <a href="/" class="btn-volver">⬅️ Volver a Portería</a>
+
+    <table id="tablaHistorial" class="display">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cédula</th>
+                <th>Nombre Completo</th>
+                <th>Destino ({{ session.get('nom_bloque', 'Bloque') }} - {{ session.get('nom_unidad', 'Unidad') }})</th>
+                <th>Registrado Por</th>
+                <th>Fecha y Hora</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in registros %}
+            <tr>
+                <td>{{ fila.id }}</td>
+                <td><strong>{{ fila.cedula }}</strong></td>
+                <td>{{ fila.nombre_completo }}</td>
+                <td>{{ fila.apartamento }}</td>
+                <td><span class="badge-portero">{{ fila.portero }}</span></td>
+                <td>{{ fila.fecha_hora }}</td>
+                <td>
+                    {% if session.get('rol') == 'administrador' %}
+                    <form action="/anular_visita/{{ fila.id }}" method="POST" onsubmit="return solicitarMotivo(this);" style="display:inline;">
+                        <input type="hidden" name="motivo" class="input-motivo">
+                        <button type="submit" style="background: none; border: none; cursor: pointer; font-size: 18px;" title="Anular registro">🚫</button>
+                    </form>
+                    {% else %}
+                    <span style="color: #ccc;">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#tablaHistorial').DataTable({
+            "pageLength": 10,
+            "order": [[ 5, "desc" ]], // Ordenar por Fecha (columna 5) descendente
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            },
+            "dom": '<"top"f>rt<"bottom"lp><"clear">', 
+        });
+    });
+
+    // Función de validación y auditoría para la anulación
+    function solicitarMotivo(formulario) {
+        let motivo = prompt("⚠️ ATENCIÓN: Por integridad de datos, el registro no se borrará, solo se anulará.\n\nEscribe el motivo de la anulación:");
+        
+        if (motivo != null && motivo.trim() !== "") {
+            formulario.querySelector('.input-motivo').value = motivo.trim();
+            return true;
+        } else {
+            alert("❌ Operación cancelada: El motivo es obligatorio para la auditoría.");
+            return false;
+        }
+    }
+</script>
+
+</body>
+</html>

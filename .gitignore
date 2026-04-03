@@ -1,0 +1,10 @@
+# Bases de datos
+*.db
+*.sqlite3
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Variables de entorno (claves secretas futuras)
+.env
