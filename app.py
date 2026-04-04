@@ -160,6 +160,7 @@ def registrar():
     trama, subunid = datos.get('trama', ''), datos.get('apartamento', '')
     vehiculo = datos.get('vehiculo', 0)
     placa = datos.get('placa', '').upper()
+    acomp = datos.get('acompanantes')
     observaciones = datos.get('observaciones', '')
     try:
         if "PubDSK" in trama:
@@ -176,23 +177,24 @@ def registrar():
         
         # INSERT CON OBSERVACIONES
         conexion.execute('''INSERT INTO visitas 
-            (cedula, nombre_completo, apartamento, portero, fecha_hora, nit_conjunto, vehiculo, placa, observaciones) 
-            VALUES (?,?,?,?,?,?,?,?,?)''', 
-            (cedula, nombre, subunid, session['usuario'], hora, session['nit_conjunto'], vehiculo, placa, observaciones))
+            (cedula, nombre_completo, apartamento, portero, fecha_hora, nit_conjunto, vehiculo, placa, acompanantes, observaciones) 
+            VALUES (?,?,?,?,?,?,?,?,?,?)''', 
+            (cedula, nombre, subunid, session['usuario'], hora, session['nit_conjunto'], vehiculo, placa, acomp, observaciones))
         
         conexion.commit()
         conexion.close()
         
         # ... (dentro de tu bloque try después del close)
         return jsonify({
-            "mensaje": "ok", 
-            "cedula": cedula, 
-            "nombre": nombre,
-            "apartamento": subunid,
-            "vehiculo": vehiculo,
-            "placa": placa,
-            "observaciones": observaciones
-        })
+    "mensaje": "ok",
+    "cedula": cedula,
+    "nombre": nombre,
+    "apartamento": subunid,
+    "vehiculo": vehiculo,
+    "placa": placa,
+    "acompanantes": acomp, # Enviamos el número real ingresado
+    "observaciones": observaciones
+})
     except Exception as e: 
         return jsonify({"error": str(e)}), 400
 

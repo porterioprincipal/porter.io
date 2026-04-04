@@ -163,14 +163,36 @@
           </select>
         </div>
         <div style="width: 100%; text-align: left; margin-bottom: 15px">
-          <label><strong>Observaciones / Acompañantes:</strong></label
+          <label><strong>Observaciones</strong></label
           ><br />
           <input
             type="text"
             id="obsInput"
-            placeholder="Ej: Trae 2 acompañantes, viene a trasteo..."
+            placeholder="Ej: Viene a trasteo, instalacion servicio internet..."
             style="width: 100%; max-width: 380px; margin-top: 5px"
           />
+        </div>
+        <div style="width: 100%; text-align: left; margin-bottom: 15px">
+          <label><strong>Acompañantes:</strong></label
+          ><br />
+          <input
+            type="number"
+            id="acompInput"
+            value="0"
+            min="0"
+            max="100"
+            style="
+              width: 80px;
+              padding: 8px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+              font-weight: bold;
+              text-align: center;
+            "
+          />
+          <span style="font-size: 0.9em; color: #666; margin-left: 5px"
+            >(Solo adicionales)</span
+          >
         </div>
         <div
           style="
@@ -325,6 +347,7 @@
             vehiculo: vaEnVehiculo,
             placa: valorPlaca,
             observaciones: document.getElementById("obsInput").value, // Capturamos el texto
+            acompanantes: parseInt(document.getElementById('acompInput').value) || 0
           };
 
           fetch("/registrar", {
@@ -371,6 +394,7 @@
         document.getElementById("placaInput").value = "";
         document.getElementById("placaInput").style.display = "none";
         document.getElementById("obsInput").value = "";
+        document.getElementById('acompInput').value = "0";
         // -------------------------------
 
         pasoApto.style.display = "none";

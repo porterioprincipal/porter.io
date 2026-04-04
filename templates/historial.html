@@ -31,6 +31,7 @@
             <th>Visitante</th>
             <th>Destino</th>
             <th>Vehículo / Placa</th>
+            <th>Acompañantes</th>
             <th>Observaciones</th>
             <th>Portero</th>
         </tr>
@@ -41,7 +42,6 @@
             <td>{{ reg['fecha_hora'] }}</td>
             <td>{{ reg['nombre_completo'] }} ({{ reg['cedula'] }})</td>
             <td>{{ reg['apartamento'] }}</td>
-            
             <td>
                 {% if reg['vehiculo'] == 1 %}
                     <span style="color: #007bff; font-weight: bold;">🚗 {{ reg['placa'] }}</span>
@@ -49,13 +49,12 @@
                     <span style="color: #6c757d;">🚶 Peatón</span>
                 {% endif %}
             </td>
-
+            <td style="text-align: center;"><strong>{{ reg['acompanantes'] }}</strong></td>
             <td>
                 <small style="font-style: italic; color: #555;">
                     {{ reg['observaciones'] if reg['observaciones'] else "---" }}
                 </small>
             </td>
-
             <td>{{ reg['portero'] }}</td>
         </tr>
         {% endfor %}
@@ -68,9 +67,10 @@
 
 <script>
     $(document).ready(function() {
-        $('#tablaHistorial').DataTable({
+        // ID corregido para que coincida con el HTML
+        $('#tabla-historial').DataTable({
             "pageLength": 10,
-            "order": [[ 5, "desc" ]], // Ordenar por Fecha (columna 5) descendente
+            "order": [[ 0, "desc" ]], // Columna 0 es Fecha/Hora
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
             },
