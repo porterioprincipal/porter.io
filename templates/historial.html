@@ -24,41 +24,43 @@
     <h1>📋 Historial de Ingresos</h1>
     <a href="/" class="btn-volver">⬅️ Volver a Portería</a>
 
-    <table id="tablaHistorial" class="display">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Cédula</th>
-                <th>Nombre Completo</th>
-                <th>Destino ({{ session.get('nom_bloque', 'Bloque') }} - {{ session.get('nom_unidad', 'Unidad') }})</th>
-                <th>Registrado Por</th>
-                <th>Fecha y Hora</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for fila in registros %}
-            <tr>
-                <td>{{ fila.id }}</td>
-                <td><strong>{{ fila.cedula }}</strong></td>
-                <td>{{ fila.nombre_completo }}</td>
-                <td>{{ fila.apartamento }}</td>
-                <td><span class="badge-portero">{{ fila.portero }}</span></td>
-                <td>{{ fila.fecha_hora }}</td>
-                <td>
-                    {% if session.get('rol') == 'administrador' %}
-                    <form action="/anular_visita/{{ fila.id }}" method="POST" onsubmit="return solicitarMotivo(this);" style="display:inline;">
-                        <input type="hidden" name="motivo" class="input-motivo">
-                        <button type="submit" style="background: none; border: none; cursor: pointer; font-size: 18px;" title="Anular registro">🚫</button>
-                    </form>
-                    {% else %}
-                    <span style="color: #ccc;">-</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <table id="tabla-historial">
+    <thead>
+        <tr>
+            <th>Fecha/Hora</th>
+            <th>Visitante</th>
+            <th>Destino</th>
+            <th>Vehículo / Placa</th>
+            <th>Observaciones</th>
+            <th>Portero</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reg in registros %}
+        <tr>
+            <td>{{ reg['fecha_hora'] }}</td>
+            <td>{{ reg['nombre_completo'] }} ({{ reg['cedula'] }})</td>
+            <td>{{ reg['apartamento'] }}</td>
+            
+            <td>
+                {% if reg['vehiculo'] == 1 %}
+                    <span style="color: #007bff; font-weight: bold;">🚗 {{ reg['placa'] }}</span>
+                {% else %}
+                    <span style="color: #6c757d;">🚶 Peatón</span>
+                {% endif %}
+            </td>
+
+            <td>
+                <small style="font-style: italic; color: #555;">
+                    {{ reg['observaciones'] if reg['observaciones'] else "---" }}
+                </small>
+            </td>
+
+            <td>{{ reg['portero'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

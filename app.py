@@ -158,6 +158,9 @@ def index():
 def registrar():
     datos = request.json
     trama, subunid = datos.get('trama', ''), datos.get('apartamento', '')
+    vehiculo = datos.get('vehiculo', 0)
+    placa = datos.get('placa', '').upper()
+    observaciones = datos.get('observaciones', '')
     try:
         if "PubDSK" in trama:
             t_u = trama.split("PubDSK")[-1].strip("_") 
@@ -170,16 +173,25 @@ def registrar():
 
         hora = datetime.now(bogota_tz).strftime('%Y-%m-%d %H:%M:%S')
         conexion = sqlite3.connect(DB_PATH)
-        conexion.execute('INSERT INTO visitas (cedula, nombre_completo, apartamento, portero, fecha_hora, nit_conjunto) VALUES (?,?,?,?,?,?)', 
-                        (cedula, nombre, subunid, session['usuario'], hora, session['nit_conjunto']))
-        conexion.commit(); conexion.close()
         
-        # EL CAMBIO ESTÁ AQUÍ: Devolvemos cedula, nombre y apartamento para que el HTML los vea
+        # INSERT CON OBSERVACIONES
+        conexion.execute('''INSERT INTO visitas 
+            (cedula, nombre_completo, apartamento, portero, fecha_hora, nit_conjunto, vehiculo, placa, observaciones) 
+            VALUES (?,?,?,?,?,?,?,?,?)''', 
+            (cedula, nombre, subunid, session['usuario'], hora, session['nit_conjunto'], vehiculo, placa, observaciones))
+        
+        conexion.commit()
+        conexion.close()
+        
+        # ... (dentro de tu bloque try después del close)
         return jsonify({
             "mensaje": "ok", 
             "cedula": cedula, 
-            "nombre": nombre, 
-            "apartamento": subunid
+            "nombre": nombre,
+            "apartamento": subunid,
+            "vehiculo": vehiculo,
+            "placa": placa,
+            "observaciones": observaciones
         })
     except Exception as e: 
         return jsonify({"error": str(e)}), 400
