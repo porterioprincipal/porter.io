@@ -1,160 +1,389 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - {{ session.get('nom_bloque', 'Manzana') }}s y Usuarios</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Panel de Administración - {{ session.get('nom_bloque', 'Manzana') }}s y
+      Usuarios
+    </title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f8f9fa; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1, h2, h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px;}
-        h3 { border-bottom: 1px solid #eee; color: #34495e; }
-        .btn-volver { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        .btn-volver:hover { background: #5a6268; }
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        .card { background: #fdfdfd; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 30px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 15px; transition: 0.3s; }
-        button:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #343a40; color: white; }
-        .btn-small { padding: 6px 10px; font-size: 0.85em; width: auto; margin-right: 5px; }
-        .btn-danger { background-color: #dc3545; }
-        .btn-warning { background-color: #ffc107; color: black; }
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
-        .badge-activo { background: #d4edda; color: #155724; }
-        .badge-inactivo { background: #f8d7da; color: #721c24; }
-        .form-estructura { background: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        background-color: #f8f9fa;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      h1,
+      h2,
+      h3 {
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+      h3 {
+        border-bottom: 1px solid #eee;
+        color: #34495e;
+      }
+      .btn-volver {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .btn-volver:hover {
+        background: #5a6268;
+      }
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+      .card {
+        background: #fdfdfd;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        margin-bottom: 30px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+        font-size: 15px;
+        transition: 0.3s;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 0.9em;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background-color: #343a40;
+        color: white;
+      }
+      .btn-small {
+        padding: 6px 10px;
+        font-size: 0.85em;
+        width: auto;
+        margin-right: 5px;
+      }
+      .btn-danger {
+        background-color: #dc3545;
+      }
+      .btn-warning {
+        background-color: #ffc107;
+        color: black;
+      }
+      .badge {
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+      .badge-activo {
+        background: #d4edda;
+        color: #155724;
+      }
+      .badge-inactivo {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .form-estructura {
+        background: #e8f4f8;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #17a2b8;
+      }
+      /* Estilos para el árbol de estructura */
+      .estructura-item { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+      .estructura-item summary { font-weight: bold; cursor: pointer; padding: 12px 15px; outline: none; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 6px; transition: background 0.2s; }
+      .estructura-item summary:hover { background: #e2e6ea; }
+      .sub-lista { list-style: none; padding-left: 0; margin: 0; border-top: 1px dashed #ccc; background: white; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+      .sub-lista li { padding: 10px 20px 10px 40px; color: #555; display: flex; justify-content: space-between; border-bottom: 1px solid #f1f1f1; font-size: 0.95em; }
+      .sub-lista li:last-child { border-bottom: none; }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="container">
+      <a href="/" class="btn-volver">⬅️ Volver a Portería</a>
+      <h1>⚙️ Panel de Administración del Conjunto</h1>
+      <p>
+        Bienvenido, <strong>{{ usuario_actual }}</strong>. Aquí puedes gestionar
+        tu personal de seguridad y la estructura de tu conjunto.
+      </p>
 
-<div class="container">
-    <a href="/" class="btn-volver">⬅️ Volver a Portería</a>
-    <h1>⚙️ Panel de Administración del Conjunto</h1>
-    <p>Bienvenido, <strong>{{ usuario_actual }}</strong>. Aquí puedes gestionar tu personal de seguridad y la estructura de tu conjunto.</p>
-
-    <div class="grid-container">
+      <div class="grid-container">
         <div class="card">
-            <h2>👥 Crear Nuevo Usuario</h2>
-            <form action="/admin/crear_usuario" method="POST">
-                <div class="form-group"><label>Nombres:</label><input type="text" name="nombres" required></div>
-                <div class="form-group"><label>Apellidos:</label><input type="text" name="apellidos" required></div>
-                <div class="form-group"><label>Empresa de Seguridad (Opcional):</label><input type="text" name="empresa" placeholder="Ej: Seguridad LTDA"></div>
-                <div class="form-group">
-                    <label>Tipo de Identificación:</label>
-                    <select name="tipo_identificacion">
-                        <option value="CC">Cédula de Ciudadanía</option>
-                        <option value="CE">Cédula de Extranjería</option>
-                        <option value="PEP">PEP</option>
-                    </select>
-                </div>
-                <div class="form-group"><label>Número de Identificación:</label><input type="text" name="numero_identificacion" required></div>
-                
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                
-                <div class="form-group"><label>Nombre de Usuario (Para el login):</label><input type="text" name="username" placeholder="Ej: j.perez" required></div>
-                <div class="form-group"><label>Contraseña:</label><input type="password" name="password" required></div>
-                <div class="form-group">
-                    <label>Rol en el Sistema:</label>
-                    <select name="rol">
-                        <option value="portero">Portero (Solo registra visitas)</option>
-                        <option value="administrador">Administrador (Acceso a este panel)</option>
-                    </select>
-                </div>
-                <button type="submit">➕ Registrar Usuario</button>
-            </form>
+          <h2>👥 Crear Nuevo Usuario</h2>
+          <form action="/admin/crear_usuario" method="POST">
+            <div class="form-group">
+              <label>Nombres:</label
+              ><input type="text" name="nombres" required />
+            </div>
+            <div class="form-group">
+              <label>Apellidos:</label
+              ><input type="text" name="apellidos" required />
+            </div>
+            <div class="form-group">
+              <label>Empresa de Seguridad (Opcional):</label
+              ><input
+                type="text"
+                name="empresa"
+                placeholder="Ej: Seguridad LTDA"
+              />
+            </div>
+            <div class="form-group">
+              <label>Tipo de Identificación:</label>
+              <select name="tipo_identificacion" required>
+                {% for t in tipos_doc %}
+                <option value="{{ t.id }}">
+                  {{ t.sigla }} - {{ t.nombre }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Número de Identificación:</label
+              ><input type="text" name="numero_identificacion" required />
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0" />
+
+            <div class="form-group">
+              <label>Nombre de Usuario (Para el login):</label
+              ><input
+                type="text"
+                name="username"
+                placeholder="Ej: j.perez"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Contraseña:</label
+              ><input type="password" name="password" required />
+            </div>
+            <div class="form-group">
+              <label>Rol en el Sistema:</label>
+              <select name="rol">
+                <option value="portero">Portero (Solo registra visitas)</option>
+                <option value="administrador">
+                  Administrador (Acceso a este panel)
+                </option>
+              </select>
+            </div>
+            <button type="submit">➕ Registrar Usuario</button>
+          </form>
         </div>
 
-        <div class="card" style="overflow-x: auto;">
-            <h2>📋 Usuarios Registrados</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Usuario</th>
-                        <th>Nombre</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in usuarios %}
-                    <tr>
-                        <td><strong>{{ u.username }}</strong></td>
-                        <td>{{ u.nombres }} {{ u.apellidos }}</td>
-                        <td>{{ u.rol | capitalize }}</td>
-                        <td>
-                            {% if u.activo == 1 %}
-                                <span class="badge badge-activo">Activo</span>
-                            {% else %}
-                                <span class="badge badge-inactivo">Inactivo</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if u.username == usuario_actual %}
-                                <span style="color: #6c757d; font-size: 0.85em; font-weight: bold;">👤 Tu cuenta actual</span>
-                            {% else %}
-                                <form action="/admin/toggle_usuario/{{ u.id }}" method="POST" style="display:inline-block; margin-bottom: 5px;">
-                                    <button type="submit" class="btn-small {% if u.activo == 1 %}btn-danger{% else %}btn-warning{% endif %}" title="Activar/Desactivar">
-                                        {% if u.activo == 1 %}Bloquear{% else %}Activar{% endif %}
-                                    </button>
-                                </form>
-                                
-                                <br>
-                                
-                                <form action="/admin/reset_password/{{ u.id }}" method="POST" style="display:flex; gap: 5px; align-items: center; margin-top: 5px;">
-                                    <input type="text" name="nueva_password" placeholder="Nueva clave" required style="width: 100px; padding: 4px; font-size: 0.8em; margin: 0; border: 1px solid #ccc; border-radius: 3px;">
-                                    <button type="submit" class="btn-small" style="background-color: #007bff; color: white; margin: 0; border: none; border-radius: 3px; cursor: pointer;" onclick="return confirm('¿Seguro que deseas cambiar la contraseña de {{ u.username }}?')">🔄 Reset</button>
-                                </form>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <div class="card" style="overflow-x: auto">
+          <h2>📋 Usuarios Registrados</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Nombre</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in usuarios %}
+              <tr>
+                <td><strong>{{ u.username }}</strong></td>
+                <td>{{ u.nombres }} {{ u.apellidos }}</td>
+                <td>{{ u.rol | capitalize }}</td>
+                <td>
+                  {% if u.activo == 1 %}
+                  <span class="badge badge-activo">Activo</span>
+                  {% else %}
+                  <span class="badge badge-inactivo">Inactivo</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if u.username == usuario_actual %}
+                  <span
+                    style="color: #6c757d; font-size: 0.85em; font-weight: bold"
+                    >👤 Tu cuenta actual</span
+                  >
+                  {% else %}
+                  <form
+                    action="/admin/toggle_usuario/{{ u.id }}"
+                    method="POST"
+                    style="display: inline-block; margin-bottom: 5px"
+                  >
+                    <button
+                      type="submit"
+                      class="btn-small {% if u.activo == 1 %}btn-danger{% else %}btn-warning{% endif %}"
+                      title="Activar/Desactivar"
+                    >
+                      {% if u.activo == 1 %}Bloquear{% else %}Activar{% endif %}
+                    </button>
+                  </form>
 
-    <div class="card">
-    <h2>🏢 Estructura del Conjunto</h2>
-    <div class="grid-container">
-        <div class="form-estructura">
+                  <br />
+
+                  <form
+                    action="/admin/reset_password/{{ u.id }}"
+                    method="POST"
+                    style="
+                      display: flex;
+                      gap: 5px;
+                      align-items: center;
+                      margin-top: 5px;
+                    "
+                  >
+                    <input
+                      type="text"
+                      name="nueva_password"
+                      placeholder="Nueva clave"
+                      required
+                      style="
+                        width: 100px;
+                        padding: 4px;
+                        font-size: 0.8em;
+                        margin: 0;
+                        border: 1px solid #ccc;
+                        border-radius: 3px;
+                      "
+                    />
+                    <button
+                      type="submit"
+                      class="btn-small"
+                      style="
+                        background-color: #007bff;
+                        color: white;
+                        margin: 0;
+                        border: none;
+                        border-radius: 3px;
+                        cursor: pointer;
+                      "
+                      onclick="return confirm('¿Seguro que deseas cambiar la contraseña de {{ u.username }}?')"
+                    >
+                      🔄 Reset
+                    </button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🏢 Estructura del Conjunto</h2>
+        <div class="grid-container">
+          <div class="form-estructura">
             <h3>1. Crear {{ session.get('nom_bloque') }}</h3>
             <form action="/admin/crear_unidad" method="POST">
-                <input type="text" name="nombre_unidad" placeholder="Ej: Torre 1" required>
-                <button type="submit">Agregar</button>
+              <input
+                type="text"
+                name="nombre_unidad"
+                placeholder="Ej: Torre 1"
+                required
+              />
+              <button type="submit">Agregar</button>
             </form>
-        </div>
+          </div>
 
-        <div class="form-estructura">
+          <div class="form-estructura">
             <h3>2. Crear {{ session.get('nom_unidad') }}</h3>
             <form action="/admin/crear_subunidad" method="POST">
-                <select name="unidad_id" required>
-                    <option value="">Seleccione {{ session.get('nom_bloque') }}...</option>
-                    {% for u in unidades %}
-                        <option value="{{ u.id }}">{{ u.nombre }}</option>
-                    {% endfor %}
-                </select>
-                <input type="text" name="nombre_subunidad" placeholder="Ej: Apto 101" required>
-                <button type="submit">Agregar</button>
+              <select name="unidad_id" required>
+                <option value="">
+                  Seleccione {{ session.get('nom_bloque') }}...
+                </option>
+                {% for u in unidades %}
+                <option value="{{ u.id }}">{{ u.nombre }}</option>
+                {% endfor %}
+              </select>
+              <input
+                type="text"
+                name="nombre_subunidad"
+                placeholder="Ej: Apto 101"
+                required
+              />
+              <button type="submit">Agregar</button>
             </form>
+          </div>
         </div>
-    </div>
 
-    <table>
-        <thead><tr><th>Nombre {{ session.get('nom_bloque') }}</th><th>Estado</th></tr></thead>
-        <tbody>
-            {% for u in unidades %}
-            <tr><td>{{ u.nombre }}</td><td>Activo</td></tr>
+        <h3 style="margin-top: 30px;">🗺️ Árbol del Conjunto</h3>
+        <div>
+            {% for u in estructura %}
+            <details class="estructura-item">
+                <summary>
+                    <span>🏢 {{ session.get('nom_bloque') }} {{ u.nombre }}</span>
+                    <span class="badge badge-activo">Activo ▼</span>
+                </summary>
+                <ul class="sub-lista">
+                    {% for s in u.subunidades %}
+                        <li>
+                            <span>🚪 {{ session.get('nom_unidad') }} {{ s.nombre }}</span> 
+                            <span style="color: #28a745; font-size: 0.85em; font-weight: bold;">✓ OK</span>
+                        </li>
+                    {% else %}
+                        <li style="color: #999; text-align: center; justify-content: center;">
+                            <em>No hay subunidades registradas en este bloque aún.</em>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </details>
+            {% else %}
+            <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                <p style="color: #666;">Aún no has creado la estructura de tu conjunto.</p>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
-</div>
-
-</body>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

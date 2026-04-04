@@ -75,10 +75,11 @@
             </div>
             <div class="form-group"><label>Nombres del Admin:</label><input type="text" name="nombres" required></div>
             <div class="form-group"><label>Apellidos:</label><input type="text" name="apellidos" required></div>
-            <div class="form-group"><label>Cédula:</label><input type="text" name="cedula" required></div>
+            
+            <div class="form-group"><label>Número de Documento (CC):</label><input type="text" name="cedula" required></div>
             <br>
             <div class="form-group"><label>Usuario de Login:</label><input type="text" name="username" placeholder="Ej: admin_torres" required></div>
-            <div class="form-group"><label>Contraseña Temporal:</label><input type="text" name="password" required></div>
+            <div class="form-group"><label>Contraseña Temporal:</label><input type="password" name="password" required></div>
             <div class="form-group" style="margin-top: 24px;"><button type="submit" class="btn-amarillo">Crear Administrador</button></div>
         </form>
     </div>
@@ -96,7 +97,7 @@
         </thead>
         <tbody>
             {% for c in conjuntos %}
-            <tr class="{% if c.bloqueado == 1 %}fila-suspendida{% endif %}">
+            <tr class="{% if c.bloqueado == 1 or c.fecha_vencimiento < hoy %}fila-suspendida{% endif %}">
                 <form action="/superadmin/actualizar/{{ c.id }}" method="POST">
                     <input type="hidden" name="nit_viejo" value="{{ c.nit }}">
                     <td><input type="text" name="nit" value="{{ c.nit }}" style="width: 110px;"></td>
@@ -111,6 +112,10 @@
                             <option value="0" {% if c.bloqueado == 0 %}selected{% endif %}>Activo</option>
                             <option value="1" {% if c.bloqueado == 1 %}selected{% endif %}>SUSPENDER</option>
                         </select>
+                        
+                        {% if c.fecha_vencimiento < hoy %}
+                            <br><span style="color: #dc3545; font-size: 0.8em; font-weight: bold;">⚠️ VENCIDO AUTOMÁTICAMENTE</span>
+                        {% endif %}
                     </td>
                     <td><button type="submit" class="btn-azul">💾 Actualizar</button></td>
                 </form>
@@ -135,6 +140,7 @@
                     <th>Conjunto / Cliente</th>
                     <th>Usuario (Login)</th>
                     <th>Nombre Real</th>
+                    <th>Documento</th>
                     <th>Rol</th>
                     <th>Estado</th>
                     <th>Acciones (Soporte)</th>
@@ -146,6 +152,9 @@
                     <td><strong>{{ usr.nombre_cliente }}</strong></td>
                     <td><code>{{ usr.username }}</code></td>
                     <td>{{ usr.nombres }} {{ usr.apellidos }}</td>
+                    
+                    <td><span style="color:#555; font-size:0.9em;">{{ usr.tipo_sigla }}</span> {{ usr.numero_identificacion }}</td>
+                    
                     <td>
                         {% if usr.rol == 'administrador' %}
                             <span class="badge badge-admin">ADMINISTRADOR</span>
@@ -165,7 +174,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px;">No hay usuarios creados en el sistema aún.</td>
+                    <td colspan="7" style="text-align: center; padding: 20px;">No hay usuarios creados en el sistema aún.</td>
                 </tr>
                 {% endfor %}
             </tbody>

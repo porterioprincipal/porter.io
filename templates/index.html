@@ -117,8 +117,8 @@
     </div>
 
     <p>
-      Portero: <strong>{{ usuario_actual }}</strong>
-      <span class="badge-rol">{{ rol_actual }}</span>
+      Usuario: <strong>{{ usuario_actual }}</strong>
+      - Rol: <span class="badge-rol">{{ rol_actual }}</span>
     </p>
 
     <hr
@@ -368,7 +368,7 @@
                 infoRegistro.innerHTML = `
             <div style="color: #28a745; font-weight: bold; margin-bottom: 5px;">✅ REGISTRO EXITOSO</div>
             <b>Destino:</b> ${data.apartamento}<br>
-            <b>Visitante:</b> ${data.nombre} (${data.cedula})<br>
+            <b>Visitante:</b> ${data.nombre} (${data.numero_documento})<br>
             <b>Transporte:</b> ${iconoVehiculo} ${infoVehiculo}<br>
             <div style="margin-top: 5px; font-size: 0.9em; color: #666;">
                 <b>Obs:</b> ${data.observaciones || "---"}
