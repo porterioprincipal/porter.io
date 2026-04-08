@@ -5,6 +5,9 @@ import re
 import os
 import pytz
 from werkzeug.security import generate_password_hash, check_password_hash
+import csv
+from io import StringIO
+from flask import Response # Asegúrate de que Response esté importado de flask junto con render_template, request, etc.
 
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
@@ -361,6 +364,73 @@ def crear_usuario():
     conexion.execute('INSERT INTO usuarios (nombres, apellidos, empresa, tipo_identificacion, numero_identificacion, username, password, rol, nit_conjunto) VALUES (?,?,?,?,?,?,?,?,?)', (d['nombres'], d['apellidos'], d['empresa'], d['tipo_identificacion'], d['numero_identificacion'], d['username'], h, d['rol'], session['nit_conjunto']))
     conexion.commit(); conexion.close()
     return redirect(url_for('admin_panel'))
+
+@app.route('/admin/descargar_historial', methods=['POST'])
+def descargar_historial():
+    # 1. Seguridad: Solo administradores
+    if session.get('rol') != 'administrador':
+        return redirect(url_for('index'))
+
+    # 2. Recibir las fechas del formulario
+    fecha_inicio = request.form.get('fecha_inicio')
+    fecha_fin = request.form.get('fecha_fin')
+
+    if not fecha_inicio or not fecha_fin:
+        return "Las fechas son requeridas", 400
+
+    # 💡 TRUCO PRO: Añadimos las horas para que abarque los días completos
+    # Si piden del 10 al 12, buscamos desde el 10 a las 00:00:00 hasta el 12 a las 23:59:59
+    inicio_full = f"{fecha_inicio} 00:00:00"
+    fin_full = f"{fecha_fin} 23:59:59"
+
+    try:
+        conexion = sqlite3.connect(DB_PATH)
+        conexion.row_factory = sqlite3.Row
+        
+        # 3. Buscamos los registros en ese rango de fechas
+        query = '''
+            SELECT v.fecha_hora, t.sigla as tipo_doc, v.numero_documento, v.nombre_completo, 
+                   v.apartamento, v.vehiculo, v.placa, v.acompanantes, v.observaciones, 
+                   v.portero, v.estado, v.motivo_anulacion
+            FROM visitas v
+            LEFT JOIN tipos_documento t ON v.tipo_doc_id = t.id
+            WHERE v.nit_conjunto = ? AND v.fecha_hora BETWEEN ? AND ?
+            ORDER BY v.fecha_hora DESC
+        '''
+        registros = conexion.execute(query, (session['nit_conjunto'], inicio_full, fin_full)).fetchall()
+        conexion.close()
+
+        # 4. Fabricar el archivo Excel (CSV) en la memoria RAM
+        si = StringIO()
+        # Usamos punto y coma (;) porque el Excel en español lo lee mejor que la coma (,)
+        cw = csv.writer(si, delimiter=';') 
+        
+        # Escribimos la fila de los títulos (Cabecera)
+        cw.writerow(['Fecha y Hora', 'Tipo Doc', 'Documento', 'Visitante', 'Destino', 'Vehiculo', 'Placa', 'Acompanantes', 'Observaciones', 'Portero', 'Estado', 'Motivo Anulacion'])
+        
+        # Escribimos los datos de cada visita
+        for r in registros:
+            vehiculo_str = "SI" if r['vehiculo'] == 1 else "NO"
+            cw.writerow([
+                r['fecha_hora'], r['tipo_doc'], r['numero_documento'], r['nombre_completo'],
+                r['apartamento'], vehiculo_str, r['placa'] or '', r['acompanantes'],
+                r['observaciones'] or '', r['portero'], r['estado'], r['motivo_anulacion'] or ''
+            ])
+
+        # 5. Empaquetar y enviar el archivo al navegador para que inicie la descarga
+        output = si.getvalue()
+        
+        # Añadir BOM para que Excel lea los tildes y las ñ correctamente
+        output_con_utf8_bom = '\ufeff' + output 
+
+        return Response(
+            output_con_utf8_bom,
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment;filename=Reporte_Visitas_{fecha_inicio}_al_{fecha_fin}.csv"}
+        )
+
+    except Exception as e:
+        return f"Error generando reporte: {e}", 500
 
 @app.route('/admin/reset_password/<int:id>', methods=['POST'])
 def reset_password(id):

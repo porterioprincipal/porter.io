@@ -70,6 +70,28 @@
             </tbody>
           </table>
         </div>
+
+        <div class="card">
+          <h2>📊 Descargar Reporte de Visitas</h2>
+          <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Selecciona un rango de fechas para exportar el historial a Excel.</p>
+          
+          <form action="/admin/descargar_historial" method="POST">
+            <div class="grid-container" style="gap: 15px; grid-template-columns: 1fr 1fr; margin-bottom: 15px;">
+              
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Desde:</label>
+                <input type="date" name="fecha_inicio" required />
+              </div>
+              
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Hasta:</label>
+                <input type="date" name="fecha_fin" required />
+              </div>
+              
+            </div>
+            <button type="submit" class="btn-azul">📥 Descargar en Excel (CSV)</button>
+          </form>
+        </div>
       </div>
 
       <div class="card">
