@@ -24,13 +24,37 @@
     <div id="paso-escaner">
       <p style="font-size: 1.2em; font-weight: bold;">1. Identificación del Visitante</p>
       
-      <select id="tipoDocSelect" style="width: 80%; max-width: 400px; font-weight: bold;">
+      <input type="text" id="escanerInput" class="input-escaner" placeholder="Escanea o digita el número..." autofocus autocomplete="off"/>
+      
+      <br>
+      <button id="btnModoManual" class="btn-azul" style="margin-top: 15px; width: 80%; max-width: 400px;">
+        ✍️ No tengo escáner (Ingreso Manual)
+      </button>
+    </div>
+
+    <div id="paso-datos-manuales" style="display: none; margin-top: 20px;">
+      <p style="font-size: 1.2em; font-weight: bold;">📝 Datos del Visitante</p>
+      <div class="formulario-destino">
+          
+        <select id="tipoDocSelect" style="width: 80%; max-width: 400px; font-weight: bold;">
         {% for t in tipos_doc %}
           <option value="{{ t.id }}">{{ t.sigla }} - {{ t.nombre }}</option>
         {% endfor %}
-      </select><br>
+        </select><br>
 
-      <input type="text" id="escanerInput" class="input-escaner" placeholder="Escanea o digita el número..." autofocus autocomplete="off"/>
+          <div class="form-group" style="width: 100%;">
+              <label>Número de Documento:</label>
+              <input type="text" id="docManualInput" required style="font-weight: bold; color: #007bff;">
+          </div>
+          
+          <div class="form-group" style="width: 100%;">
+              <label>Nombre Completo:</label>
+              <input type="text" id="nombreManualInput" placeholder="Ej: Juan Perez" required>
+          </div>
+          
+          <button id="btnContinuarManual" class="btn-verde btn-w200">Continuar a Destino ➡️</button>
+          <button id="btnCancelarManual" class="btn-danger btn-w200">Cancelar</button>
+      </div>
     </div>
 
     <div id="paso-apto" style="display: none">
@@ -102,6 +126,58 @@
       const pasoApto = document.getElementById("paso-apto");
       const infoRegistro = document.getElementById("info-registro");
 
+      let esIngresoManual = false;
+      let documentoFinal = "";
+      let nombreFinal = "";
+
+      const btnModoManual = document.getElementById("btnModoManual");
+      const pasoDatosManuales = document.getElementById("paso-datos-manuales");
+      const docManualInput = document.getElementById("docManualInput");
+      const nombreManualInput = document.getElementById("nombreManualInput");
+      const btnContinuarManual = document.getElementById("btnContinuarManual");
+      const btnCancelarManual = document.getElementById("btnCancelarManual");
+
+      // 1. Cuando hacen clic en "No tengo escáner"
+      btnModoManual.addEventListener("click", function () {
+        esIngresoManual = true; 
+        pasoEscaner.style.display = "none"; 
+        pasoDatosManuales.style.display = "block"; 
+        
+        docManualInput.value = inputEscaner.value.trim();
+        
+        if (docManualInput.value === "") {
+          docManualInput.focus(); 
+        } else {
+          nombreManualInput.focus(); 
+        }
+      });
+
+      // 2. Cuando se arrepienten y le dan a "Cancelar"
+      btnCancelarManual.addEventListener("click", function () {
+        esIngresoManual = false;
+        docManualInput.value = "";
+        nombreManualInput.value = "";
+        inputEscaner.value = "";
+        
+        pasoDatosManuales.style.display = "none";
+        pasoEscaner.style.display = "block";
+        inputEscaner.focus();
+      });
+
+      // 3. Cuando llenan el nombre y le dan a "Continuar a Destino"
+      btnContinuarManual.addEventListener("click", function () {
+        documentoFinal = docManualInput.value.trim();
+        nombreFinal = nombreManualInput.value.trim().toUpperCase(); 
+
+        if (documentoFinal === "" || nombreFinal === "") {
+          alert("⚠️ Por favor, completa el documento y el nombre del visitante.");
+          return;
+        }
+
+        pasoDatosManuales.style.display = "none";
+        pasoApto.style.display = "block";
+      });
+
       inputEscaner.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -112,23 +188,46 @@
         }
       });
 
-      selectTipoDoc.addEventListener("change", () => inputEscaner.focus());
-      document.getElementById("btnCancelar").addEventListener("click", reiniciarPantalla);
-
+      //selectTipoDoc.addEventListener("change", () => inputEscaner.focus());
       document.getElementById("btnGuardar").addEventListener("click", function () {
-          if (selectUnidad.value === "" || selectSubunidad.value === "") { alert(`⚠️ Debes seleccionar ${nomBloque} y ${nomUnidad}.`); return; }
+          // 1. Validaciones originales de la Torre/Apto y Vehículo
+          if (selectUnidad.value === "" || selectSubunidad.value === "") { 
+              alert(`⚠️ Debes seleccionar ${nomBloque} y ${nomUnidad}.`); 
+              return; 
+          }
           const vaEnVehiculo = document.getElementById("vehiculoCheck").checked ? 1 : 0;
           const valorPlaca = document.getElementById("placaInput").value.toUpperCase();
-          if (vaEnVehiculo === 1 && valorPlaca.trim() === "") { alert("⚠️ Por favor ingresa la placa del vehículo."); document.getElementById("placaInput").focus(); return; }
+          if (vaEnVehiculo === 1 && valorPlaca.trim() === "") { 
+              alert("⚠️ Por favor ingresa la placa del vehículo."); 
+              document.getElementById("placaInput").focus(); 
+              return; 
+          }
+
+          // 🛡️ NUEVO ESCUDO: Si es manual, verificamos que la memoria NO esté vacía antes de enviar
+          if (esIngresoManual && (documentoFinal === "" || nombreFinal === "")) {
+              alert("❌ Error interno: Los datos del visitante se perdieron. Por favor, vuelve a escribirlos.");
+              reiniciarPantalla();
+              return;
+          }
 
           infoRegistro.innerHTML = "<b>⌛ Procesando en la nube...</b>";
+          const idTipoDocumento = esIngresoManual ? document.getElementById("tipoDocSelect").value : 1;
+          
           const payload = {
-            trama: tramaTemporal, tipo_doc_id: selectTipoDoc.value, 
+            es_manual: esIngresoManual, 
+            trama: tramaTemporal, 
+            documento_manual: documentoFinal, 
+            nombre_manual: nombreFinal,       
+            tipo_doc_id: idTipoDocumento, 
             apartamento: `${selectUnidad.options[selectUnidad.selectedIndex].text} - ${selectSubunidad.value}`,
-            vehiculo: vaEnVehiculo, placa: valorPlaca,
+            vehiculo: vaEnVehiculo, 
+            placa: valorPlaca,
             observaciones: document.getElementById("obsInput").value,
             acompanantes: parseInt(document.getElementById('acompInput').value) || 0
           };
+
+          // 🕵️‍♂️ HERRAMIENTA DE DEBUG: Esto imprimirá en la consola oculta de tu navegador lo que se está enviando
+          console.log("📦 PAQUETE QUE VIAJA A PYTHON:", payload);
 
           fetch("/registrar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
             .then(res => res.json())
@@ -143,13 +242,27 @@
         });
 
       function reiniciarPantalla() {
+        // --- FIX: RESETEAR LA MEMORIA MANUAL ---
+        esIngresoManual = false;
+        documentoFinal = "";
+        nombreFinal = "";
+        docManualInput.value = "";
+        nombreManualInput.value = "";
+        // ---------------------------------------
+
         inputEscaner.value = ""; selectUnidad.selectedIndex = 0;
         selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`;
         selectTipoDoc.selectedIndex = 0; 
         document.getElementById("vehiculoCheck").checked = false;
         document.getElementById("placaInput").value = ""; document.getElementById("placaInput").style.display = "none";
         document.getElementById("obsInput").value = ""; document.getElementById('acompInput').value = "0";
-        pasoApto.style.display = "none"; pasoEscaner.style.display = "block";
+        
+        // Escondemos todas las pantallas secundarias por si acaso
+        document.getElementById("paso-datos-manuales").style.display = "none";
+        pasoApto.style.display = "none"; 
+        
+        // Mostramos solo el escáner y le ponemos el foco
+        pasoEscaner.style.display = "block";
         setTimeout(() => inputEscaner.focus(), 100);
       }
 

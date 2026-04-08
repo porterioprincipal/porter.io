@@ -225,34 +225,50 @@ def index():
 
 @app.route('/registrar', methods=['POST'])
 def registrar():
+    if 'usuario' not in session:
+        return jsonify({'error': 'No hay sesión activa'}), 401
+
     datos = request.json
-    trama, subunid = datos.get('trama', ''), datos.get('apartamento', '')
+    subunid = datos.get('apartamento', '')
     vehiculo = datos.get('vehiculo', 0)
     placa = datos.get('placa', '').upper()
     acomp = datos.get('acompanantes', 0)
     observaciones = datos.get('observaciones', '')
     
-    # NUEVO: Recibimos el tipo de documento. Si no viene (escáner), asumimos 1 (CC)
-    tipo_doc_id = datos.get('tipo_doc_id', 1)
+    # ¿Cómo ingresó el visitante?
+    es_manual = datos.get('es_manual', False)
 
     try:
-        if "PubDSK" in trama:
-            t_u = trama.split("PubDSK")[-1].strip("_") 
-            m_c = re.search(r'(\d+)', t_u)
-            numero_doc = m_c.group(1).lstrip('0')
-            m_n = re.search(r'([A-ZÑ\s]+?)(?=\d)', t_u[m_c.end():])
-            nombre = " ".join(m_n.group(1).split()).strip() if m_n else "Error"
-            tipo_doc_id = 1 # El escáner de barras suele ser CC
-        else: 
-            numero_doc, nombre = trama, "Manual"
+        if es_manual:
+            # ✍️ LÓGICA MANUAL
+            numero_doc = datos.get('documento_manual', '').strip()
+            nombre = datos.get('nombre_manual', '').strip()
+            tipo_doc_id = datos.get('tipo_doc_id', 1)
+            
+            if not numero_doc or not nombre:
+                return jsonify({'error': 'Faltan datos en el ingreso manual'}), 400
+        else:
+            # 🔫 LÓGICA ESCÁNER
+            trama = datos.get('trama', '')
+            if "PubDSK" in trama:
+                t_u = trama.split("PubDSK")[-1].strip("_") 
+                m_c = re.search(r'(\d+)', t_u)
+                numero_doc = m_c.group(1).lstrip('0') if m_c else ""
+                m_n = re.search(r'([A-ZÑ\s]+?)(?=\d)', t_u[m_c.end():]) if m_c else None
+                nombre = " ".join(m_n.group(1).split()).strip() if m_n else "VISITANTE"
+            else:
+                numero_doc = ''.join(filter(str.isdigit, trama))
+                nombre = "VISITANTE"
+            
+            tipo_doc_id = 1 
 
-        hora = datetime.now(bogota_tz).strftime('%Y-%m-%d %H:%M:%S')
         conexion = sqlite3.connect(DB_PATH)
+        hora = datetime.now(bogota_tz).strftime('%Y-%m-%d %H:%M:%S')
         
-        # INSERT RELACIONAL: Usamos tipo_doc_id y numero_documento
+        # 💾 INSERTAMOS DIRECTO SIN VALIDAR SI YA ESTÁ ADENTRO
         conexion.execute('''INSERT INTO visitas 
-            (tipo_doc_id, numero_documento, nombre_completo, apartamento, portero, fecha_hora, nit_conjunto, vehiculo, placa, acompanantes, observaciones) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)''', 
+            (tipo_doc_id, numero_documento, nombre_completo, apartamento, portero, fecha_hora, nit_conjunto, vehiculo, placa, acompanantes, observaciones, estado) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,'activo')''', 
             (tipo_doc_id, numero_doc, nombre, subunid, session['usuario'], hora, session['nit_conjunto'], vehiculo, placa, acomp, observaciones))
         
         conexion.commit()
