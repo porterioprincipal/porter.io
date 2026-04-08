@@ -390,8 +390,8 @@ def descargar_historial():
         # 3. Buscamos los registros en ese rango de fechas
         query = '''
             SELECT v.fecha_hora, t.sigla as tipo_doc, v.numero_documento, v.nombre_completo, 
-                   v.apartamento, v.vehiculo, v.placa, v.acompanantes, v.observaciones, 
-                   v.portero, v.estado, v.motivo_anulacion
+                v.apartamento, v.vehiculo, v.placa, v.acompanantes, v.observaciones, 
+                v.portero, v.estado, v.motivo_anulacion
             FROM visitas v
             LEFT JOIN tipos_documento t ON v.tipo_doc_id = t.id
             WHERE v.nit_conjunto = ? AND v.fecha_hora BETWEEN ? AND ?

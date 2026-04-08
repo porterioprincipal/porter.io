@@ -122,13 +122,13 @@
             {% for u in estructura %}
             <details class="estructura-item">
                 <summary>
-                    <span>🏢 {{ session.get('nom_bloque') }} {{ u.nombre }}</span>
+                    <span>🏢 {{ u.nombre }}</span>
                     <span class="badge badge-activo">Activo ▼</span>
                 </summary>
                 <ul class="sub-lista">
                     {% for s in u.subunidades %}
                         <li>
-                            <span>🚪 {{ session.get('nom_unidad') }} {{ s.nombre }}</span> 
+                            <span>🚪{{ s.nombre }}</span> 
                             <span class="text-success-small">✓ OK</span>
                         </li>
                     {% else %}
