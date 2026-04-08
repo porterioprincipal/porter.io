@@ -4,91 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Visitas - Portería</title>
-    <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            padding: 20px; 
-            background-color: #f8f9fa; 
-            color: #333; 
-            margin: 0;
-        }
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 25px; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-        }
-        h1 { 
-            color: #2c3e50; 
-            border-bottom: 3px solid #28a745; 
-            padding-bottom: 10px; 
-            margin-bottom: 20px;
-            margin-top: 0;
-        }
-        .btn-volver { 
-            display: inline-block; 
-            margin-bottom: 20px; 
-            padding: 10px 20px; 
-            background: #6c757d; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 5px; 
-            font-weight: bold; 
-            transition: 0.3s;
-        }
-        .btn-volver:hover { background: #5a6268; }
-        
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 15px; 
-            font-size: 0.9em; 
-        }
-        th, td { 
-            padding: 12px; 
-            text-align: left; 
-            border-bottom: 1px solid #ddd; 
-        }
-        th { background-color: #343a40; color: white; white-space: nowrap; }
-        tr:hover { background-color: #f1f1f1; }
-        
-        .badge { 
-            padding: 5px 10px; 
-            border-radius: 12px; 
-            font-size: 0.85em; 
-            font-weight: bold; 
-            white-space: nowrap;
-        }
-        .badge-vehiculo { background: #17a2b8; color: white; }
-        .badge-peaton { background: #e9ecef; color: #495057; border: 1px solid #ccc; }
-        
-        .btn-anular { 
-            background-color: #dc3545; 
-            color: white; 
-            border: none; 
-            padding: 6px 10px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-size: 0.85em; 
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        .btn-anular:hover { background-color: #c82333; }
-        
-        .doc-sigla {
-            color: #6c757d;
-            font-size: 0.9em;
-            margin-right: 4px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
+<body class="body-estandar">
 
-    <div class="container">
+    <div class="container container-large">
         <a href="/" class="btn-volver">⬅️ Volver al Escáner</a>
-        <h1>📋 Historial Central de Ingresos</h1>
+        <h1 class="titulo-verde">📋 Historial Central de Ingresos</h1>
         <p style="color: #666; margin-top: -10px; margin-bottom: 20px;">
             Conjunto: <strong>{{ session.get('nom_cliente', 'Actual') }}</strong> | Turno: <strong>{{ session.get('turno_guardado') }}</strong>
         </p>
@@ -98,40 +20,28 @@
                 <thead>
                     <tr>
                         <th>Fecha y Hora</th>
-                        <th>Documento</th> <th>Visitante</th>
+                        <th>Documento</th>
+                        <th>Visitante</th>
                         <th>Destino</th>
                         <th>Acomp.</th>
                         <th>Transporte</th>
                         <th>Observaciones</th>
                         <th>Portero Registró</th>
-                        
-                        {% if session.get('rol') == 'administrador' %}
-                        <th>Acciones</th>
-                        {% endif %}
+                        {% if session.get('rol') == 'administrador' %}<th>Acciones</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for r in registros %}
                     <tr>
-                        <td style="white-space: nowrap;">{{ r.fecha_hora }}</td>
-                        
-                        <td>
-                            <span class="doc-sigla">{{ r.tipo_sigla or 'CC' }}</span> 
-                            <strong>{{ r.numero_documento }}</strong>
-                        </td>
-                        
+                        <td>{{ r.fecha_hora }}</td>
+                        <td><span class="doc-sigla">{{ r.tipo_sigla or 'CC' }}</span> <strong>{{ r.numero_documento }}</strong></td>
                         <td>{{ r.nombre_completo }}</td>
                         <td><strong>{{ r.apartamento }}</strong></td>
                         <td style="text-align: center;">{{ r.acompanantes }}</td>
-                        
                         <td>
-                            {% if r.vehiculo == 1 %}
-                                <span class="badge badge-vehiculo">🚗 {{ r.placa }}</span>
-                            {% else %}
-                                <span class="badge badge-peaton">🚶 Peatón</span>
-                            {% endif %}
+                            {% if r.vehiculo == 1 %}<span class="badge badge-vehiculo">🚗 {{ r.placa }}</span>
+                            {% else %}<span class="badge badge-peaton">🚶 Peatón</span>{% endif %}
                         </td>
-                        
                         <td style="max-width: 200px; word-wrap: break-word;">{{ r.observaciones or '---' }}</td>
                         <td>{{ r.portero }}</td>
                         
@@ -146,7 +56,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="{% if session.get('rol') == 'administrador' %}9{% else %}8{% endif %}" style="text-align: center; padding: 30px; color: #666;">
+                        <td colspan="{% if session.get('rol') == 'administrador' %}9{% else %}8{% endif %}" class="empty-state">
                             No hay registros activos de visitas.
                         </td>
                     </tr>
@@ -159,15 +69,10 @@
     <script>
         function solicitarMotivo(form) {
             let motivo = prompt("⚠️ Vas a anular este registro.\nPor favor, ingresa el motivo de la anulación:");
-            
             if (motivo && motivo.trim() !== "") {
-                // Si escribió un motivo, lo inyectamos en el campo oculto y enviamos
-                form.querySelector('.input-motivo').value = motivo;
-                return true;
+                form.querySelector('.input-motivo').value = motivo; return true;
             } else {
-                // Si canceló o lo dejó vacío, detenemos el envío
-                alert("❌ Operación cancelada. Debes ingresar un motivo válido para anular un registro.");
-                return false;
+                alert("❌ Operación cancelada. Debes ingresar un motivo válido para anular un registro."); return false;
             }
         }
     </script>

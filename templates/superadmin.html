@@ -4,97 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SaaS Master Panel - José Arroyo</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; padding: 20px; color: #333; }
-        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h1, h2, h3 { color: #2c3e50; }
-        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 30px; }
-        .fila-suspendida { background-color: #ffeeba !important; }
-        .panel-seccion { padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-        .bg-azul { background: #e8f4f8; border-left: 4px solid #17a2b8; }
-        .bg-amarillo { background: #fff3cd; border-left: 4px solid #ffc107; }
-        .bg-gris { background: #f8f9fa; border: 1px solid #dee2e6; }
-        
-        .form-group { display: inline-block; margin-right: 15px; margin-bottom: 15px; vertical-align: top; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: #555; }
-        input, select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        
-        button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-verde { background-color: #28a745; color: white; }
-        .btn-verde:hover { background-color: #218838; }
-        .btn-azul { background-color: #007bff; color: white; padding: 6px 10px; font-size: 0.9em; }
-        .btn-azul:hover { background-color: #0056b3; }
-        .btn-amarillo { background-color: #ffc107; color: black; }
-        .btn-amarillo:hover { background-color: #e0a800; }
-        .btn-salir { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #343a40; color: white; }
-        
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
-        .badge-admin { background: #e3f2fd; color: #0d47a1; }
-        .badge-portero { background: #f5f5f5; color: #616161; border: 1px solid #ddd; }
-        .badge-activo { color: #28a745; }
-        .badge-inactivo { color: #dc3545; }
-        
-        .buscador { width: 100%; padding: 10px; font-size: 16px; border: 2px solid #007bff; border-radius: 5px; margin-bottom: 15px; box-sizing: border-box; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
+<body class="body-master">
 
-<div class="container">
+<div class="container container-master">
     <a href="/logout" class="btn-salir">🚪 Salir del Panel Maestro</a>
     
     <h1>🚀 Panel Maestro de Suscripciones (SaaS)</h1>
     
     <div class="panel-seccion bg-azul">
-        <h3>➕ 1. Registrar Nuevo Cliente (Conjunto/Edificio)</h3>
+        <h3>➕ 1. Registrar Nuevo Cliente</h3>
         <form action="/superadmin/agregar" method="POST">
-            <div class="form-group"><label>NIT:</label><input type="text" name="nit" required placeholder="Ej: 900123456-1"></div>
-            <div class="form-group"><label>Nombre del Conjunto:</label><input type="text" name="nombre" required placeholder="Ej: Torres del Sol"></div>
-            <div class="form-group"><label>Fecha Vencimiento Mes:</label><input type="date" name="fecha" required></div>
-            <div class="form-group"><label>¿Cómo llaman al Bloque?:</label><input type="text" name="nom_bloque" required placeholder="Ej: Torre, Manzana" value="Torre"></div>
-            <div class="form-group"><label>¿Cómo llaman a la Unidad?:</label><input type="text" name="nom_unidad" required placeholder="Ej: Apto, Casa" value="Apartamento"></div>
-            <div class="form-group" style="margin-top: 24px;"><button type="submit" class="btn-verde">Registrar Cliente</button></div>
+            <div class="form-group-inline"><label>NIT:</label><input type="text" name="nit" required placeholder="Ej: 900123456-1"></div>
+            <div class="form-group-inline"><label>Nombre del Conjunto:</label><input type="text" name="nombre" required placeholder="Ej: Torres del Sol"></div>
+            <div class="form-group-inline"><label>Fecha Vencimiento:</label><input type="date" name="fecha" required></div>
+            <div class="form-group-inline"><label>¿Cómo llaman al Bloque?:</label><input type="text" name="nom_bloque" required value="Torre"></div>
+            <div class="form-group-inline"><label>¿Cómo llaman a la Unidad?:</label><input type="text" name="nom_unidad" required value="Apartamento"></div>
+            <div class="form-group-inline" style="margin-top: 24px;"><button type="submit" class="btn-verde">Registrar Cliente</button></div>
         </form>
     </div>
 
     <div class="panel-seccion bg-amarillo">
-        <h3>🔑 2. Crear Primer Usuario Administrador para un Cliente</h3>
-        <p style="font-size: 0.9em; color: #666; margin-top: -10px;">Crea el usuario para que el administrador del conjunto pueda ingresar y configurar sus bloques, apartamentos y porteros.</p>
+        <h3>🔑 2. Crear Primer Administrador</h3>
         <form action="/superadmin/crear_admin" method="POST">
-            <div class="form-group">
-                <label>Asignar al Conjunto:</label>
+            <div class="form-group-inline">
+                <label>Conjunto:</label>
                 <select name="nit_conjunto" required>
                     <option value="">Seleccione el cliente...</option>
-                    {% for c in conjuntos %}
-                        <option value="{{ c.nit }}">{{ c.nombre_cliente }}</option>
-                    {% endfor %}
+                    {% for c in conjuntos %}<option value="{{ c.nit }}">{{ c.nombre_cliente }}</option>{% endfor %}
                 </select>
             </div>
-            <div class="form-group"><label>Nombres del Admin:</label><input type="text" name="nombres" required></div>
-            <div class="form-group"><label>Apellidos:</label><input type="text" name="apellidos" required></div>
-            
-            <div class="form-group"><label>Número de Documento (CC):</label><input type="text" name="cedula" required></div>
-            <br>
-            <div class="form-group"><label>Usuario de Login:</label><input type="text" name="username" placeholder="Ej: admin_torres" required></div>
-            <div class="form-group"><label>Contraseña Temporal:</label><input type="password" name="password" required></div>
-            <div class="form-group" style="margin-top: 24px;"><button type="submit" class="btn-amarillo">Crear Administrador</button></div>
+            <div class="form-group-inline"><label>Nombres Admin:</label><input type="text" name="nombres" required></div>
+            <div class="form-group-inline"><label>Apellidos:</label><input type="text" name="apellidos" required></div>
+            <div class="form-group-inline"><label>Documento (CC):</label><input type="text" name="cedula" required></div>
+            <div class="form-group-inline"><label>Usuario (Login):</label><input type="text" name="username" required></div>
+            <div class="form-group-inline"><label>Contraseña:</label><input type="password" name="password" required></div>
+            <div class="form-group-inline" style="margin-top: 24px;"><button type="submit" class="btn-amarillo">Crear Administrador</button></div>
         </form>
     </div>
 
-    <h3>🏢 Mis Clientes Actuales (Control de Pagos)</h3>
+    <h3>🏢 Mis Clientes Actuales</h3>
     <table style="margin-bottom: 40px;">
-        <thead>
-            <tr>
-                <th>NIT</th>
-                <th>Nombre Cliente</th>
-                <th>Nomenclatura</th>
-                <th>Vencimiento / Estado</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
+        <thead><tr><th>NIT</th><th>Nombre Cliente</th><th>Nomenclatura</th><th>Vencimiento / Estado</th><th>Acción</th></tr></thead>
         <tbody>
             {% for c in conjuntos %}
             <tr class="{% if c.bloqueado == 1 or c.fecha_vencimiento < hoy %}fila-suspendida{% endif %}">
@@ -102,80 +54,47 @@
                     <input type="hidden" name="nit_viejo" value="{{ c.nit }}">
                     <td><input type="text" name="nit" value="{{ c.nit }}" style="width: 110px;"></td>
                     <td><input type="text" name="nombre" value="{{ c.nombre_cliente }}" style="width: 180px;"></td>
-                    <td>
-                        <input type="text" name="nom_bloque" value="{{ c.nom_bloque }}" style="width: 80px;" title="Nombre del Bloque"> / 
-                        <input type="text" name="nom_unidad" value="{{ c.nom_unidad }}" style="width: 80px;" title="Nombre de la Unidad">
-                    </td>
+                    <td><input type="text" name="nom_bloque" value="{{ c.nom_bloque }}" style="width: 80px;"> / <input type="text" name="nom_unidad" value="{{ c.nom_unidad }}" style="width: 80px;"></td>
                     <td>
                         <input type="date" name="fecha" value="{{ c.fecha_vencimiento }}">
                         <select name="bloqueado">
                             <option value="0" {% if c.bloqueado == 0 %}selected{% endif %}>Activo</option>
                             <option value="1" {% if c.bloqueado == 1 %}selected{% endif %}>SUSPENDER</option>
                         </select>
-                        
-                        {% if c.fecha_vencimiento < hoy %}
-                            <br><span style="color: #dc3545; font-size: 0.8em; font-weight: bold;">⚠️ VENCIDO AUTOMÁTICAMENTE</span>
-                        {% endif %}
+                        {% if c.fecha_vencimiento < hoy %}<br><span class="error">⚠️ VENCIDO</span>{% endif %}
                     </td>
                     <td><button type="submit" class="btn-azul">💾 Actualizar</button></td>
                 </form>
             </tr>
             {% else %}
-            <tr>
-                <td colspan="5" style="text-align: center;">No tienes conjuntos registrados aún. ¡Agrega el primero arriba!</td>
-            </tr>
+            <tr><td colspan="5" class="empty-state">No tienes conjuntos registrados aún.</td></tr>
             {% endfor %}
         </tbody>
     </table>
 
     <div class="panel-seccion bg-gris">
-        <h2>👥 Directorio Global de Usuarios (Auditoría)</h2>
-        <p style="color: #666; margin-top: -10px;">Lista de todos los usuarios registrados en todas las bases de datos de tus clientes.</p>
-        
+        <h2>👥 Directorio Global de Usuarios</h2>
         <input type="text" id="buscadorUsuarios" class="buscador" onkeyup="filtrarTabla()" placeholder="🔍 Buscar por nombre, usuario, conjunto o rol...">
-
         <table id="tablaUsuariosGlobal">
-            <thead>
-                <tr>
-                    <th>Conjunto / Cliente</th>
-                    <th>Usuario (Login)</th>
-                    <th>Nombre Real</th>
-                    <th>Documento</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th>Acciones (Soporte)</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Cliente</th><th>Login</th><th>Nombre Real</th><th>Documento</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody>
                 {% for usr in usuarios_globales %}
                 <tr>
                     <td><strong>{{ usr.nombre_cliente }}</strong></td>
                     <td><code>{{ usr.username }}</code></td>
                     <td>{{ usr.nombres }} {{ usr.apellidos }}</td>
-                    
-                    <td><span style="color:#555; font-size:0.9em;">{{ usr.tipo_sigla }}</span> {{ usr.numero_identificacion }}</td>
-                    
+                    <td><span class="doc-sigla">{{ usr.tipo_sigla }}</span> {{ usr.numero_identificacion }}</td>
+                    <td>{% if usr.rol == 'administrador' %}<span class="badge badge-admin">ADMINISTRADOR</span>{% else %}<span class="badge badge-portero">PORTERO</span>{% endif %}</td>
+                    <td>{% if usr.activo == 1 %}<span class="text-success-small">● Activo</span>{% else %}<span class="error">● Inactivo</span>{% endif %}</td>
                     <td>
-                        {% if usr.rol == 'administrador' %}
-                            <span class="badge badge-admin">ADMINISTRADOR</span>
-                        {% else %}
-                            <span class="badge badge-portero">PORTERO</span>
-                        {% endif %}
-                    </td>
-                    <td class="{% if usr.activo == 1 %}badge-activo{% else %}badge-inactivo{% endif %}">
-                        {% if usr.activo == 1 %}● Activo{% else %}● Inactivo{% endif %}
-                    </td>
-                    <td>
-                        <form action="/superadmin/reset_password/{{ usr.id }}" method="POST" style="display:flex; gap: 5px; align-items: center;">
-                            <input type="text" name="nueva_password" placeholder="Nueva clave" required style="width: 110px; padding: 6px; font-size: 0.85em; margin: 0;">
-                            <button type="submit" class="btn-azul" onclick="return confirm('¿Estás seguro de que quieres cambiar la contraseña del usuario {{ usr.username }}?')" style="padding: 6px 10px; margin: 0;">🔄 Reset</button>
+                        <form action="/superadmin/reset_password/{{ usr.id }}" method="POST" class="form-inline">
+                            <input type="text" name="nueva_password" placeholder="Nueva clave" required class="input-small">
+                            <button type="submit" class="btn-azul btn-small" onclick="return confirm('¿Cambiar contraseña de {{ usr.username }}?')">🔄 Reset</button>
                         </form>
                     </td>
                 </tr>
                 {% else %}
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 20px;">No hay usuarios creados en el sistema aún.</td>
-                </tr>
+                <tr><td colspan="7" class="empty-state">No hay usuarios creados en el sistema aún.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -184,27 +103,19 @@
 
 <script>
 function filtrarTabla() {
-    var input, filter, table, tr, td, i, txtValue, j, match;
-    input = document.getElementById("buscadorUsuarios");
-    filter = input.value.toUpperCase();
-    table = document.getElementById("tablaUsuariosGlobal");
-    tr = table.getElementsByTagName("tr");
-
-    for (i = 1; i < tr.length; i++) {
+    var input = document.getElementById("buscadorUsuarios");
+    var filter = input.value.toUpperCase();
+    var tr = document.getElementById("tablaUsuariosGlobal").getElementsByTagName("tr");
+    for (var i = 1; i < tr.length; i++) {
+        var td = tr[i].getElementsByTagName("td");
         tr[i].style.display = "none";
-        td = tr[i].getElementsByTagName("td");
-        for (j = 0; j < td.length; j++) {
-            if (td[j]) {
-                txtValue = td[j].textContent || td[j].innerText;
-                if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
-                    break;
-                }
+        for (var j = 0; j < td.length; j++) {
+            if (td[j] && (td[j].textContent || td[j].innerText).toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = ""; break;
             }
         }
     }
 }
 </script>
-
 </body>
 </html>

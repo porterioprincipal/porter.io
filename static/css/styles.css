@@ -1,0 +1,112 @@
+/* =========================================
+   1. ESTILOS BASE Y CONTENEDORES
+   ========================================= */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    margin: 0;
+}
+.body-estandar { background-color: #f8f9fa; padding: 20px; }
+.body-index { background-color: #f4f4f4; text-align: center; padding-top: 50px; }
+.body-login { background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; }
+.body-master { background-color: #f4f6f9; padding: 20px; }
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.container-master { max-width: 1300px; }
+.grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.card { background: #fdfdfd; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 30px; }
+
+/* =========================================
+   2. TIPOGRAFÍA Y TEXTOS
+   ========================================= */
+h1, h2, h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+h3 { border-bottom: 1px solid #eee; color: #34495e; }
+.titulo-verde { border-bottom: 3px solid #28a745; margin-top: 0; }
+.text-muted-bold { color: #6c757d; font-size: 0.85em; font-weight: bold; }
+.text-success-small { color: #28a745; font-size: 0.85em; font-weight: bold; }
+.text-muted-center { color: #999; text-align: center; justify-content: center; }
+.error { color: #dc3545; font-size: 0.9em; font-weight: bold; margin-bottom: 15px; }
+
+/* =========================================
+   3. BOTONES Y BADGES
+   ========================================= */
+button, .btn-primary { background-color: #007bff; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; transition: 0.3s; }
+button:hover, .btn-primary:hover { background-color: #0056b3; }
+
+.btn-volver { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+.btn-volver:hover { background: #5a6268; }
+.btn-salir { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+.btn-historial { display: inline-block; margin-bottom: 20px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+
+.btn-verde { background-color: #28a745; width: auto; padding: 10px 15px;}
+.btn-azul { background-color: #007bff; width: auto; padding: 6px 10px; font-size: 0.9em;}
+.btn-amarillo { background-color: #ffc107; color: black; width: auto; padding: 10px 15px;}
+.btn-anular { background-color: #dc3545; width: auto; padding: 6px 10px; font-size: 0.85em; }
+.btn-small { padding: 6px 10px; font-size: 0.85em; width: auto; margin-right: 5px; }
+.btn-danger { background-color: #dc3545; }
+.btn-warning { background-color: #ffc107; color: black; }
+.btn-w200 { width: 200px; margin-top: 15px; }
+
+.badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; white-space: nowrap; }
+.badge-activo { background: #d4edda; color: #155724; }
+.badge-inactivo { background: #f8d7da; color: #721c24; }
+.badge-vehiculo { background: #17a2b8; color: white; }
+.badge-peaton { background: #e9ecef; color: #495057; border: 1px solid #ccc; }
+.badge-admin { background: #e3f2fd; color: #0d47a1; }
+.badge-portero { background: #f5f5f5; color: #616161; border: 1px solid #ddd; }
+.badge-rol { background: #e9ecef; padding: 2px 8px; border-radius: 4px; font-size: 0.9em; text-transform: capitalize; }
+
+/* =========================================
+   4. FORMULARIOS E INPUTS
+   ========================================= */
+.form-group { margin-bottom: 15px; display: block; text-align: left; }
+.form-group-inline { display: inline-block; margin-right: 15px; margin-bottom: 15px; vertical-align: top; text-align: left; }
+.form-group label, .form-group-inline label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 0.9em; }
+
+input, select { padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; margin: 5px 0;}
+input[type="text"], input[type="password"], input[type="date"] { width: 100%; }
+
+.input-escaner { width: 80% !important; max-width: 400px; border: 2px solid #007bff !important; font-size: 18px; font-weight: bold; }
+.input-small { width: 100px !important; padding: 4px; font-size: 0.8em; margin: 0; border: 1px solid #ccc; border-radius: 3px; }
+.buscador { width: 100%; padding: 10px; font-size: 16px; border: 2px solid #007bff; border-radius: 5px; margin-bottom: 15px; box-sizing: border-box; }
+.form-inline { display: flex; gap: 5px; align-items: center; margin-top: 5px; }
+
+/* =========================================
+   5. TABLAS Y FILAS
+   ========================================= */
+table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background-color: #343a40; color: white; white-space: nowrap; }
+tr:hover { background-color: #f1f1f1; }
+.fila-suspendida { background-color: #ffeeba !important; }
+
+/* =========================================
+   6. COMPONENTES MODULARES (Paneles y Árboles)
+   ========================================= */
+.panel-seccion { padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+.bg-azul { background: #e8f4f8; border-left: 4px solid #17a2b8; }
+.bg-amarillo { background: #fff3cd; border-left: 4px solid #ffc107; }
+.bg-gris { background: #f8f9fa; border: 1px solid #dee2e6; }
+.form-estructura { background: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; }
+.empty-state { text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; color: #666; }
+.doc-sigla { color: #6c757d; font-size: 0.9em; margin-right: 4px; }
+
+/* Acordeón del Conjunto (Admin) */
+.estructura-item { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.estructura-item summary { font-weight: bold; cursor: pointer; padding: 12px 15px; outline: none; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 6px; transition: background 0.2s; }
+.estructura-item summary:hover { background: #e2e6ea; }
+.sub-lista { list-style: none; padding-left: 0; margin: 0; border-top: 1px dashed #ccc; background: white; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+.sub-lista li { padding: 10px 20px 10px 40px; color: #555; display: flex; justify-content: space-between; border-bottom: 1px solid #f1f1f1; font-size: 0.95em; }
+.sub-lista li:last-child { border-bottom: none; }
+
+/* Paneles del Portero (Index) */
+#resultado { margin-top: 30px; padding: 20px; background: white; border-radius: 8px; display: inline-block; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); min-width: 300px; text-align: left;}
+.formulario-destino { display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); display: inline-block; }
+.login-box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }

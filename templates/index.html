@@ -4,292 +4,98 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Control de Acceso - Portería</title>
-    <style>
-      body {
-        font-family: "Segoe UI", Arial, sans-serif;
-        text-align: center;
-        margin-top: 50px;
-        background-color: #f4f4f4;
-        color: #333;
-      }
-      input,
-      select,
-      button {
-        padding: 12px;
-        font-size: 16px;
-        border-radius: 5px;
-        outline: none;
-        margin: 5px;
-      }
-      input[type="text"] {
-        width: 80%;
-        max-width: 400px;
-        border: 2px solid #007bff;
-      }
-      select {
-        border: 1px solid #ccc;
-        width: 220px;
-        cursor: pointer;
-        background: white;
-      }
-      button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        width: 200px;
-        margin-top: 15px;
-        transition: 0.3s;
-      }
-      button:hover {
-        background-color: #0056b3;
-      }
-      #resultado {
-        margin-top: 30px;
-        padding: 20px;
-        background: white;
-        border-radius: 8px;
-        display: inline-block;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        min-width: 300px;
-      }
-      .btn-historial {
-        display: inline-block;
-        margin-bottom: 20px;
-        padding: 10px 15px;
-        background: #28a745;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-      }
-      .formulario-destino {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        padding: 25px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        display: inline-block;
-      }
-      .badge-rol {
-        background: #e9ecef;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 0.9em;
-        text-transform: capitalize;
-      }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   </head>
-  <body>
+  <body class="body-index">
     <h1>Control de Acceso 🏢</h1>
 
     <div style="margin-bottom: 25px">
       <a href="/historial" class="btn-historial">📋 Ver Historial Central</a>
       {% if rol_actual == 'administrador' %}
-      <a
-        href="/admin"
-        style="
-          background: #ffc107;
-          color: black;
-          padding: 10px 15px;
-          text-decoration: none;
-          border-radius: 5px;
-          font-weight: bold;
-          margin-left: 10px;
-        "
-        >⚙️ Panel Admin</a
-      >
+      <a href="/admin" style="background: #ffc107; color: black; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-left: 10px;">⚙️ Panel Admin</a>
       {% endif %}
-      <a
-        href="/logout"
-        style="
-          color: #dc3545;
-          text-decoration: none;
-          font-weight: bold;
-          margin-left: 15px;
-        "
-        >🚪 Salir</a
-      >
+      <a href="/logout" style="color: #dc3545; text-decoration: none; font-weight: bold; margin-left: 15px;">🚪 Salir</a>
     </div>
 
-    <p>
-      Usuario: <strong>{{ usuario_actual }}</strong>
-      - Rol: <span class="badge-rol">{{ rol_actual }}</span>
-    </p>
+    <p>Portero: <strong>{{ usuario_actual }}</strong> <span class="badge badge-rol">{{ rol_actual }}</span></p>
 
-    <hr
-      style="
-        width: 50%;
-        border: 0;
-        border-top: 1px solid #ccc;
-        margin: 20px auto;
-      "
-    />
+    <hr style="width: 50%; border: 0; border-top: 1px solid #ccc; margin: 20px auto;" />
 
     <div id="paso-escaner">
-      <p style="font-size: 1.2em">1. Escanea la cédula del visitante</p>
-      <input
-        type="text"
-        id="escanerInput"
-        placeholder="Esperando escáner..."
-        autofocus
-        autocomplete="off"
-      />
+      <p style="font-size: 1.2em; font-weight: bold;">1. Identificación del Visitante</p>
+      
+      <select id="tipoDocSelect" style="width: 80%; max-width: 400px; font-weight: bold;">
+        {% for t in tipos_doc %}
+          <option value="{{ t.id }}">{{ t.sigla }} - {{ t.nombre }}</option>
+        {% endfor %}
+      </select><br>
+
+      <input type="text" id="escanerInput" class="input-escaner" placeholder="Escanea o digita el número..." autofocus autocomplete="off"/>
     </div>
 
     <div id="paso-apto" style="display: none">
-      <p style="font-size: 1.2em">2. Selecciona el destino</p>
+      <p style="font-size: 1.2em; font-weight: bold;">2. Selecciona el destino</p>
       <div class="formulario-destino">
-        <div>
-          <label for="unidadSelect"
-            ><strong>{{ session.get('nom_bloque', 'Unidad') }}:</strong></label
-          >
+        <div class="form-group" style="text-align: center;">
+          <label for="unidadSelect">{{ session.get('nom_bloque', 'Unidad') }}:</label>
           <select id="unidadSelect"></select>
         </div>
-        <div style="margin-top: 15px">
-          <label for="subunidadSelect"
-            ><strong
-              >{{ session.get('nom_unidad', 'Subunidad') }}:</strong
-            ></label
-          >
+        <div class="form-group" style="text-align: center;">
+          <label for="subunidadSelect">{{ session.get('nom_unidad', 'Subunidad') }}:</label>
           <select id="subunidadSelect">
-            <option value="">
-              Seleccione {{ session.get('nom_bloque', 'Unidad') }} primero
-            </option>
+            <option value="">Seleccione {{ session.get('nom_bloque', 'Unidad') }} primero</option>
           </select>
         </div>
-        <div style="width: 100%; text-align: left; margin-bottom: 15px">
-          <label><strong>Observaciones</strong></label
-          ><br />
-          <input
-            type="text"
-            id="obsInput"
-            placeholder="Ej: Viene a trasteo, instalacion servicio internet..."
-            style="width: 100%; max-width: 380px; margin-top: 5px"
-          />
+        <div class="form-group">
+          <label>Observaciones</label>
+          <input type="text" id="obsInput" placeholder="Ej: Viene a trasteo..." style="width: 100%; max-width: 380px;" />
         </div>
-        <div style="width: 100%; text-align: left; margin-bottom: 15px">
-          <label><strong>Acompañantes:</strong></label
-          ><br />
-          <input
-            type="number"
-            id="acompInput"
-            value="0"
-            min="0"
-            max="100"
-            style="
-              width: 80px;
-              padding: 8px;
-              border: 1px solid #ccc;
-              border-radius: 4px;
-              font-weight: bold;
-              text-align: center;
-            "
-          />
-          <span style="font-size: 0.9em; color: #666; margin-left: 5px"
-            >(Solo adicionales)</span
-          >
+        <div class="form-group">
+          <label>Acompañantes:</label>
+          <input type="number" id="acompInput" value="0" min="0" max="100" style="width: 80px; text-align: center; font-weight: bold;" />
         </div>
-        <div
-          style="
-            width: 100%;
-            text-align: left;
-            margin: 15px 0;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-          "
-        >
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; width: 100%; text-align: left;">
           <label style="cursor: pointer; font-size: 1.1em">
-            <input
-              type="checkbox"
-              id="vehiculoCheck"
-              style="transform: scale(1.3); margin-right: 8px"
-            />
+            <input type="checkbox" id="vehiculoCheck" style="transform: scale(1.3); margin-right: 8px" />
             <strong>¿Ingresa en vehículo?</strong>
-          </label>
-          <br />
-          <input
-            type="text"
-            id="placaInput"
-            placeholder="PLACA (Ej: ABC-123)"
-            style="
-              display: none;
-              width: 100%;
-              max-width: 200px;
-              text-transform: uppercase;
-              margin-top: 10px;
-              font-weight: bold;
-              text-align: center;
-            "
-          />
+          </label><br />
+          <input type="text" id="placaInput" placeholder="PLACA (Ej: ABC-123)" style="display: none; width: 100%; max-width: 200px; text-transform: uppercase; font-weight: bold; text-align: center;" />
         </div>
-        <button id="btnGuardar">Registrar Ingreso</button>
-        <button
-          id="btnCancelar"
-          style="background-color: #dc3545; margin-top: 10px"
-        >
-          Cancelar
-        </button>
+        
+        <button id="btnGuardar" class="btn-w200">Registrar Ingreso</button>
+        <button id="btnCancelar" class="btn-danger btn-w200">Cancelar</button>
       </div>
     </div>
 
     <div id="resultado">
-      <h3>Último ingreso procesado:</h3>
-      <p id="info-registro" style="font-size: 18px; color: #333">
-        Esperando primer registro del turno...
-      </p>
+      <h3 style="margin-top: 0;">Último ingreso procesado:</h3>
+      <p id="info-registro" style="font-size: 18px; color: #333">Esperando primer registro del turno...</p>
     </div>
 
     <script>
-      // --- 1. CONFIGURACIÓN DINÁMICA DE NOMENCLATURA ---
       const nomBloque = "{{ session.get('nom_bloque', 'Unidad') }}";
       const nomUnidad = "{{ session.get('nom_unidad', 'Subunidad') }}";
-
       const selectUnidad = document.getElementById("unidadSelect");
       const selectSubunidad = document.getElementById("subunidadSelect");
+      const selectTipoDoc = document.getElementById("tipoDocSelect");
 
-      // Cargar las Unidades (Antes Manzanas) al iniciar
       function cargarUnidades() {
-        fetch("/api/unidades") // Nueva ruta API
-          .then((res) => res.json())
-          .then((data) => {
+        fetch("/api/unidades").then(res => res.json()).then(data => {
             selectUnidad.innerHTML = `<option value="">Seleccione ${nomBloque}...</option>`;
-            data.forEach((u) => {
-              let op = new Option(u.nombre, u.id);
-              selectUnidad.add(op);
-            });
-          })
-          .catch((err) => console.error("Error API Unidades:", err));
+            data.forEach(u => selectUnidad.add(new Option(u.nombre, u.id)));
+        });
       }
 
-      // Cargar las Subunidades (Antes Casas) al cambiar de unidad
       selectUnidad.addEventListener("change", function () {
         const unidadId = this.value;
         selectSubunidad.innerHTML = `<option value="">Cargando ${nomUnidad}s...</option>`;
-
-        if (!unidadId) {
-          selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`;
-          return;
-        }
-
-        fetch(`/api/subunidades/${unidadId}`) // Nueva ruta API
-          .then((res) => res.json())
-          .then((data) => {
+        if (!unidadId) { selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`; return; }
+        fetch(`/api/subunidades/${unidadId}`).then(res => res.json()).then(data => {
             selectSubunidad.innerHTML = `<option value="">Seleccione ${nomUnidad}...</option>`;
-            data.forEach((s) => {
-              let op = new Option(s.nombre, s.nombre);
-              selectSubunidad.add(op);
-            });
-          })
-          .catch((err) => console.error("Error API Subunidades:", err));
+            data.forEach(s => selectSubunidad.add(new Option(s.nombre, s.nombre)));
+        });
       });
 
-      // --- 2. LÓGICA DE INTERFAZ Y ESCÁNER ---
       let tramaTemporal = "";
       const pasoEscaner = document.getElementById("paso-escaner");
       const inputEscaner = document.getElementById("escanerInput");
@@ -301,131 +107,58 @@
           e.preventDefault();
           tramaTemporal = inputEscaner.value;
           if (tramaTemporal.trim() === "") return;
-
           pasoEscaner.style.display = "none";
           pasoApto.style.display = "block";
         }
       });
 
-      document
-        .getElementById("btnCancelar")
-        .addEventListener("click", reiniciarPantalla);
+      selectTipoDoc.addEventListener("change", () => inputEscaner.focus());
+      document.getElementById("btnCancelar").addEventListener("click", reiniciarPantalla);
 
-      document
-        .getElementById("btnGuardar")
-        .addEventListener("click", function () {
-          if (selectUnidad.value === "" || selectSubunidad.value === "") {
-            alert(`⚠️ Debes seleccionar ${nomBloque} y ${nomUnidad}.`);
-            return;
-          }
-
-          // --- NUEVO: CAPTURA Y VALIDACIÓN DE VEHÍCULO ---
-          const vaEnVehiculo = document.getElementById("vehiculoCheck").checked
-            ? 1
-            : 0;
-          const valorPlaca = document
-            .getElementById("placaInput")
-            .value.toUpperCase();
-
-          if (vaEnVehiculo === 1 && valorPlaca.trim() === "") {
-            alert("⚠️ Por favor ingresa la placa del vehículo.");
-            document.getElementById("placaInput").focus();
-            return; // Detiene el proceso si falta la placa
-          }
-          // ------------------------------------------------
-
-          const nombreUnidad =
-            selectUnidad.options[selectUnidad.selectedIndex].text;
-          const destinoCompleto = `${nombreUnidad} - ${selectSubunidad.value}`;
+      document.getElementById("btnGuardar").addEventListener("click", function () {
+          if (selectUnidad.value === "" || selectSubunidad.value === "") { alert(`⚠️ Debes seleccionar ${nomBloque} y ${nomUnidad}.`); return; }
+          const vaEnVehiculo = document.getElementById("vehiculoCheck").checked ? 1 : 0;
+          const valorPlaca = document.getElementById("placaInput").value.toUpperCase();
+          if (vaEnVehiculo === 1 && valorPlaca.trim() === "") { alert("⚠️ Por favor ingresa la placa del vehículo."); document.getElementById("placaInput").focus(); return; }
 
           infoRegistro.innerHTML = "<b>⌛ Procesando en la nube...</b>";
-
-          // --- NUEVO: AGREGAMOS LOS DATOS AL PAYLOAD ---
           const payload = {
-            trama: tramaTemporal,
-            apartamento: destinoCompleto,
-            vehiculo: vaEnVehiculo,
-            placa: valorPlaca,
-            observaciones: document.getElementById("obsInput").value, // Capturamos el texto
+            trama: tramaTemporal, tipo_doc_id: selectTipoDoc.value, 
+            apartamento: `${selectUnidad.options[selectUnidad.selectedIndex].text} - ${selectSubunidad.value}`,
+            vehiculo: vaEnVehiculo, placa: valorPlaca,
+            observaciones: document.getElementById("obsInput").value,
             acompanantes: parseInt(document.getElementById('acompInput').value) || 0
           };
 
-          fetch("/registrar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload), // Enviamos el payload completo
-          })
-            .then((res) => res.json())
-            .then((data) => {
+          fetch("/registrar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+            .then(res => res.json())
+            .then(data => {
               if (data.mensaje === "ok") {
-                // Lógica para el icono y texto del vehículo
                 const iconoVehiculo = data.vehiculo === 1 ? "🚗" : "🚶";
-                const infoVehiculo =
-                  data.vehiculo === 1
-                    ? `<b>Placa:</b> ${data.placa}`
-                    : "Peatón";
-
-                infoRegistro.innerHTML = `
-            <div style="color: #28a745; font-weight: bold; margin-bottom: 5px;">✅ REGISTRO EXITOSO</div>
-            <b>Destino:</b> ${data.apartamento}<br>
-            <b>Visitante:</b> ${data.nombre} (${data.numero_documento})<br>
-            <b>Transporte:</b> ${iconoVehiculo} ${infoVehiculo}<br>
-            <div style="margin-top: 5px; font-size: 0.9em; color: #666;">
-                <b>Obs:</b> ${data.observaciones || "---"}
-            </div>
-        `;
+                const infoVehiculo = data.vehiculo === 1 ? `<b>Placa:</b> ${data.placa}` : "Peatón";
+                infoRegistro.innerHTML = `<div style="color: #28a745; font-weight: bold; margin-bottom: 5px;">✅ REGISTRO EXITOSO</div><b>Destino:</b> ${data.apartamento}<br><b>Visitante:</b> ${data.nombre} (${data.numero_documento})<br><b>Transporte:</b> ${iconoVehiculo} ${infoVehiculo}<br><div style="margin-top: 5px; font-size: 0.9em; color: #666;"><b>Obs:</b> ${data.observaciones || "---"}</div>`;
                 reiniciarPantalla();
-              } else {
-                infoRegistro.innerHTML = `<div style="color: #dc3545;">❌ Error: ${data.error}</div>`;
-              }
-            })
-            .catch(() => {
-              infoRegistro.innerText = "❌ Error crítico de conexión";
-            });
+              } else { infoRegistro.innerHTML = `<div style="color: #dc3545;">❌ Error: ${data.error}</div>`; }
+            }).catch(() => infoRegistro.innerText = "❌ Error crítico de conexión");
         });
 
       function reiniciarPantalla() {
-        inputEscaner.value = "";
-        selectUnidad.selectedIndex = 0;
+        inputEscaner.value = ""; selectUnidad.selectedIndex = 0;
         selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`;
-
-        // --- NUEVO: LIMPIAR VEHÍCULO ---
+        selectTipoDoc.selectedIndex = 0; 
         document.getElementById("vehiculoCheck").checked = false;
-        document.getElementById("placaInput").value = "";
-        document.getElementById("placaInput").style.display = "none";
-        document.getElementById("obsInput").value = "";
-        document.getElementById('acompInput').value = "0";
-        // -------------------------------
-
-        pasoApto.style.display = "none";
-        pasoEscaner.style.display = "block";
+        document.getElementById("placaInput").value = ""; document.getElementById("placaInput").style.display = "none";
+        document.getElementById("obsInput").value = ""; document.getElementById('acompInput').value = "0";
+        pasoApto.style.display = "none"; pasoEscaner.style.display = "block";
         setTimeout(() => inputEscaner.focus(), 100);
       }
 
-      // Foco automático inteligente
-      document.addEventListener("click", (e) => {
-        if (
-          pasoEscaner.style.display !== "none" &&
-          !["A", "SELECT", "OPTION", "INPUT"].includes(e.target.tagName)
-        ) {
-          inputEscaner.focus();
-        }
-      });
-
-      // Carga inicial
+      document.addEventListener("click", (e) => { if (pasoEscaner.style.display !== "none" && !["A", "SELECT", "OPTION", "INPUT"].includes(e.target.tagName)) inputEscaner.focus(); });
       cargarUnidades();
-
-      const vehiculoCheck = document.getElementById("vehiculoCheck");
-      const placaInput = document.getElementById("placaInput");
-
-      vehiculoCheck.addEventListener("change", function () {
-        if (this.checked) {
-          placaInput.style.display = "block";
-          placaInput.focus();
-        } else {
-          placaInput.style.display = "none";
-          placaInput.value = ""; // Limpiar si se arrepiente
-        }
+      document.getElementById("vehiculoCheck").addEventListener("change", function () {
+        const placa = document.getElementById("placaInput");
+        placa.style.display = this.checked ? "block" : "none";
+        if(this.checked) placa.focus(); else placa.value = "";
       });
     </script>
   </body>
