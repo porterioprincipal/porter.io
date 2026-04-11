@@ -192,6 +192,33 @@
       comText.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
       inputEscaner.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
 
+      // --- INICIALIZACIÓN Y AUTO-RECONEXIÓN ---
+      async function intentarAutoConexion() {
+        if ("serial" in navigator) {
+          try {
+            const ports = await navigator.serial.getPorts();
+            if (ports.length > 0) {
+              puerto = ports[0];
+              await puerto.open({ baudRate: 9600 });
+              
+              comText.innerText = "✅ Lector Auto-Conectado (COM)";
+              comText.style.color = "#28a745";
+              inputEscaner.placeholder = "Escáner activo. Pase la cédula...";
+              inputEscaner.style.cursor = "text";
+
+              const decoder = new TextDecoderStream();
+              puerto.readable.pipeTo(decoder.writable);
+              lector = decoder.readable.getReader();
+
+              console.log("🚀 Escáner re-conectado automáticamente");
+              escucharLector();
+            }
+          } catch (err) {
+            console.error("No se pudo auto-conectar:", err);
+          }
+        }
+      }
+
       // --- LÓGICA DE NEGOCIO ---
       function cargarUnidades() {
         fetch("/api/unidades").then(res => res.json()).then(data => {
@@ -239,7 +266,7 @@
         pasoApto.style.display = "block";
       });
 
-      // Mantenemos soporte por si usan teclado
+      // Mantenemos soporte por si usan teclado tradicional (Enter)
       inputEscaner.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -340,8 +367,11 @@
         if(this.checked) placa.focus();
       });
 
-      // Inicialización
-      cargarUnidades();
+      // --- DISPARO DE CARGA INICIAL ---
+      window.addEventListener('DOMContentLoaded', () => {
+          cargarUnidades();
+          intentarAutoConexion();
+      });
     </script>
   </body>
 </html>
