@@ -8,7 +8,7 @@
 </head>
 <body class="body-estandar">
     <div class="container container-large">
-      <a href="/" class="btn-volver">⬅️ Volver a Portería</a>
+      <a href="{{ url_for('visitas.index') }}" class="btn-volver">⬅️ Volver a Portería</a>
       <h1>⚙️ Panel de Administración del Conjunto</h1>
       <p>Bienvenido, <strong>{{ usuario_actual }}</strong>. Aquí puedes gestionar tu personal de seguridad y la estructura de tu conjunto.</p>
 
@@ -16,7 +16,7 @@
         
         <div class="card">
           <h2>👥 Crear Nuevo Usuario</h2>
-          <form action="/admin/crear_usuario" method="POST">
+          <form action="{{ url_for('admin.crear_usuario') }}" method="POST">
             <div class="form-group"><label>Nombres:</label><input type="text" name="nombres" required /></div>
             <div class="form-group"><label>Apellidos:</label><input type="text" name="apellidos" required /></div>
             <div class="form-group"><label>Empresa (Opcional):</label><input type="text" name="empresa" placeholder="Ej: Seguridad LTDA" /></div>
@@ -56,10 +56,10 @@
                   {% if u.username == usuario_actual %}
                   <span class="text-muted-bold">👤 Tu cuenta actual</span>
                   {% else %}
-                  <form action="/admin/toggle_usuario/{{ u.id }}" method="POST" style="display: inline-block; margin-bottom: 5px">
+                  <form action="{{ url_for('admin.toggle_usuario', id=u.id) }}" method="POST" style="display: inline-block; margin-bottom: 5px">
                     <button type="submit" class="btn-small {% if u.activo == 1 %}btn-danger{% else %}btn-warning{% endif %}">{% if u.activo == 1 %}Bloquear{% else %}Activar{% endif %}</button>
                   </form>
-                  <form action="/admin/reset_password/{{ u.id }}" method="POST" class="form-inline">
+                  <form action="{{ url_for('admin.reset_password', id=u.id) }}" method="POST" class="form-inline">
                     <input type="text" name="nueva_password" placeholder="Nueva clave" required class="input-small" />
                     <button type="submit" class="btn-azul btn-small" onclick="return confirm('¿Seguro?')">🔄 Reset</button>
                   </form>
@@ -75,7 +75,7 @@
           <h2>📊 Descargar Reporte de Visitas</h2>
           <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Selecciona un rango de fechas para exportar el historial a Excel.</p>
           
-          <form action="/admin/descargar_historial" method="POST">
+          <form action="{{ url_for('admin.descargar_historial') }}" method="POST">
             <div class="grid-container" style="gap: 15px; grid-template-columns: 1fr 1fr; margin-bottom: 15px;">
               
               <div class="form-group" style="margin-bottom: 0;">
@@ -99,14 +99,14 @@
         <div class="grid-container">
           <div class="form-estructura">
             <h3>1. Crear {{ session.get('nom_bloque') }}</h3>
-            <form action="/admin/crear_unidad" method="POST">
+            <form action="{{ url_for('admin.crear_unidad') }}" method="POST">
               <input type="text" name="nombre_unidad" placeholder="Ej: Torre 1" required />
               <button type="submit" class="btn-verde" style="margin-top:10px;">Agregar</button>
             </form>
           </div>
           <div class="form-estructura">
             <h3>2. Crear {{ session.get('nom_unidad') }}</h3>
-            <form action="/admin/crear_subunidad" method="POST">
+            <form action="{{ url_for('admin.crear_subunidad') }}" method="POST">
               <select name="unidad_id" required style="margin-bottom: 10px;">
                 <option value="">Seleccione {{ session.get('nom_bloque') }}...</option>
                 {% for u in unidades %}<option value="{{ u.id }}">{{ u.nombre }}</option>{% endfor %}

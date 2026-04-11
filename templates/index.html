@@ -18,11 +18,11 @@
     <h1>Control de Acceso 🏢</h1>
 
     <div style="margin-bottom: 25px">
-      <a href="/historial" class="btn-historial">📋 Ver Historial Central</a>
+      <a href="{{ url_for('visitas.historial') }}" class="btn-historial">📋 Ver Historial Central</a>
       {% if rol_actual == 'administrador' %}
-      <a href="/admin" style="background: #ffc107; color: black; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-left: 10px;">⚙️ Panel Admin</a>
+      <a href="{{ url_for('admin.admin_panel') }}" style="background: #ffc107; color: black; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-left: 10px;">⚙️ Panel Admin</a>
       {% endif %}
-      <a href="/logout" style="color: #dc3545; text-decoration: none; font-weight: bold; margin-left: 15px;">🚪 Salir</a>
+      <a href="{{ url_for('auth.logout') }}" style="color: #dc3545; text-decoration: none; font-weight: bold; margin-left: 15px;">🚪 Salir</a>
     </div>
 
     <p>Usuario: <strong>{{ usuario_actual }}</strong> Rol: <span class="badge badge-rol">{{ rol_actual }}</span></p>
@@ -35,9 +35,7 @@
 
     <div id="paso-escaner">
       <p style="font-size: 1.2em; font-weight: bold;">1. Identificación del Visitante</p>
-      
       <input type="text" id="escanerInput" class="input-escaner" placeholder="Haz clic aquí para conectar el escáner..." autofocus autocomplete="off" style="cursor: pointer; text-align: center;"/>
-      
       <br>
       <button id="btnModoManual" class="btn-azul" style="margin-top: 15px; width: 80%; max-width: 400px;">
         ✍️ No tengo escáner (Ingreso Manual)
@@ -47,23 +45,19 @@
     <div id="paso-datos-manuales" style="display: none; margin-top: 20px;">
       <p style="font-size: 1.2em; font-weight: bold;">📝 Datos del Visitante</p>
       <div class="formulario-destino">
-          
         <select id="tipoDocSelect" style="width: 80%; max-width: 400px; font-weight: bold; padding: 8px;">
         {% for t in tipos_doc %}
           <option value="{{ t.id }}">{{ t.sigla }} - {{ t.nombre }}</option>
         {% endfor %}
         </select>
-
           <div class="form-group">
               <label>Número de Documento:</label>
               <input type="text" id="docManualInput" required style="font-weight: bold; color: #007bff; padding: 8px;">
           </div>
-          
           <div class="form-group">
               <label>Nombre Completo:</label>
               <input type="text" id="nombreManualInput" placeholder="Ej: JUAN PEREZ" required style="padding: 8px; text-transform: uppercase;">
           </div>
-          
           <div style="margin-top: 10px;">
             <button id="btnContinuarManual" class="btn-verde btn-w200">Continuar a Destino ➡️</button>
             <button id="btnCancelarManual" class="btn-danger btn-w200">Cancelar</button>
@@ -99,7 +93,6 @@
           </label><br />
           <input type="text" id="placaInput" placeholder="PLACA (Ej: ABC-123)" style="display: none; width: 100%; margin-top: 10px; text-transform: uppercase; font-weight: bold; text-align: center; padding: 8px;" />
         </div>
-        
         <div style="margin-top: 10px;">
           <button id="btnGuardar" class="btn-verde btn-w200">Registrar Ingreso</button>
           <button id="btnCancelar" class="btn-danger btn-w200">Cancelar</button>
@@ -161,14 +154,9 @@
           if (done) break;
           if (value) {
             buffer += value;
-            // Si llega un fin de línea o enter
             if (buffer.includes('\r') || buffer.includes('\n')) {
-                
-                // 1. Convertimos los Nulos de la Registraduría en espacios
                 let limpia = buffer.replace(/\x00/g, " ");
-                // 2. Eliminamos el resto de la basura de control ASCII
                 limpia = limpia.replace(/[\x01-\x1F\x7F-\x9F]/g, "");
-                // 3. Colapsamos espacios múltiples en uno solo
                 limpia = limpia.replace(/\s+/g, " ").trim();
 
                 if (limpia !== "") {
@@ -182,17 +170,15 @@
 
       function procesarEntradaEscaner(trama) {
           tramaTemporal = trama;
-          inputEscaner.value = trama; // Feedback visual opcional
+          inputEscaner.value = trama;
           pasoEscaner.style.display = "none";
           pasoApto.style.display = "block";
           setTimeout(() => selectUnidad.focus(), 150);
       }
 
-      // UX: Conectar intencionalmente
       comText.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
       inputEscaner.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
 
-      // --- INICIALIZACIÓN Y AUTO-RECONEXIÓN ---
       async function intentarAutoConexion() {
         if ("serial" in navigator) {
           try {
@@ -219,9 +205,9 @@
         }
       }
 
-      // --- LÓGICA DE NEGOCIO ---
+      // 🛠️ ACTUALIZACIÓN 2: Fetch usando url_for a las APIs
       function cargarUnidades() {
-        fetch("/api/unidades").then(res => res.json()).then(data => {
+        fetch("{{ url_for('api.obtener_unidades') }}").then(res => res.json()).then(data => {
             selectUnidad.innerHTML = `<option value="">Seleccione ${nomBloque}...</option>`;
             data.forEach(u => selectUnidad.add(new Option(u.nombre, u.id)));
         });
@@ -231,6 +217,8 @@
         const unidadId = this.value;
         selectSubunidad.innerHTML = `<option value="">Cargando ${nomUnidad}s...</option>`;
         if (!unidadId) { selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`; return; }
+        
+        // Mantenemos esta dinámica porque enviar el ID en JavaScript es más fácil así:
         fetch(`/api/subunidades/${unidadId}`).then(res => res.json()).then(data => {
             selectSubunidad.innerHTML = `<option value="">Seleccione ${nomUnidad}...</option>`;
             data.forEach(s => selectSubunidad.add(new Option(s.nombre, s.nombre)));
@@ -266,7 +254,6 @@
         pasoApto.style.display = "block";
       });
 
-      // Mantenemos soporte por si usan teclado tradicional (Enter)
       inputEscaner.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -295,7 +282,6 @@
               return;
           }
 
-          // 🛡️ BLOQUEO ANTI-DUPLICADOS
           btnGuardar.disabled = true;
           btnGuardar.innerText = "⏳ Guardando...";
           infoRegistro.innerHTML = "<b>⌛ Procesando en el servidor...</b>";
@@ -315,7 +301,8 @@
             acompanantes: parseInt(document.getElementById('acompInput').value) || 0
           };
 
-          fetch("/registrar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+          // 🛠️ ACTUALIZACIÓN 3: Fetch de registro conectado al Blueprint 'visitas'
+          fetch("{{ url_for('visitas.registrar') }}", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
               if (data.mensaje === "ok") {
@@ -367,7 +354,6 @@
         if(this.checked) placa.focus();
       });
 
-      // --- DISPARO DE CARGA INICIAL ---
       window.addEventListener('DOMContentLoaded', () => {
           cargarUnidades();
           intentarAutoConexion();

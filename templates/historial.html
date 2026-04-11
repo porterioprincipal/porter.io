@@ -9,7 +9,7 @@
 <body class="body-estandar">
 
     <div class="container container-large">
-        <a href="/" class="btn-volver">⬅️ Volver al Escáner</a>
+        <a href="{{ url_for('visitas.index') }}" class="btn-volver">⬅️ Volver al Escáner</a>
         <h1 class="titulo-verde">📋 Historial Central de Ingresos</h1>
         <p style="color: #666; margin-top: -10px; margin-bottom: 20px;">
             Conjunto: <strong>{{ session.get('nom_cliente', 'Actual') }}</strong> | Turno: <strong>{{ session.get('turno_guardado') }}</strong>
@@ -47,7 +47,7 @@
                         
                         {% if session.get('rol') == 'administrador' %}
                         <td>
-                            <form action="/anular_visita/{{ r.id }}" method="POST" onsubmit="return solicitarMotivo(this);" style="margin: 0;">
+                            <form action="{{ url_for('visitas.anular_visita', id=r.id) }}" method="POST" onsubmit="return solicitarMotivo(this);" style="margin: 0;">
                                 <input type="hidden" name="motivo" class="input-motivo">
                                 <button type="submit" class="btn-anular" title="Anular este registro">🚫 Anular</button>
                             </form>
