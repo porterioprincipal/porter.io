@@ -3,8 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Control de Acceso - Portería</title>
+    <title>Control de Acceso PRO - Portería</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+      .input-escaner:focus { border: 3px solid #28a745; outline: none; box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); }
+      .btn-verde { background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+      .btn-verde:disabled { background-color: #6c757d; cursor: not-allowed; }
+      .btn-w200 { width: 200px; margin: 5px; }
+      .formulario-destino { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+      .form-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; text-align: left; }
+    </style>
   </head>
   <body class="body-index">
     <h1>Control de Acceso 🏢</h1>
@@ -17,14 +25,18 @@
       <a href="/logout" style="color: #dc3545; text-decoration: none; font-weight: bold; margin-left: 15px;">🚪 Salir</a>
     </div>
 
-    <p>Portero: <strong>{{ usuario_actual }}</strong> <span class="badge badge-rol">{{ rol_actual }}</span></p>
+    <p>Usuario: <strong>{{ usuario_actual }}</strong> Rol: <span class="badge badge-rol">{{ rol_actual }}</span></p>
+    
+    <div id="status-com" style="font-size: 0.9em; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: inline-block;">
+        Lector: <span id="comText" style="font-weight: bold; color: #dc3545; cursor: pointer;">🔴 Desconectado (Haz clic aquí para activar)</span>
+    </div>
 
-    <hr style="width: 50%; border: 0; border-top: 1px solid #ccc; margin: 20px auto;" />
+    <hr style="width: 50%; border: 0; border-top: 1px solid #ccc; margin: 10px auto 20px auto;" />
 
     <div id="paso-escaner">
       <p style="font-size: 1.2em; font-weight: bold;">1. Identificación del Visitante</p>
       
-      <input type="text" id="escanerInput" class="input-escaner" placeholder="Escanea el documento..." autofocus autocomplete="off"/>
+      <input type="text" id="escanerInput" class="input-escaner" placeholder="Haz clic aquí para conectar el escáner..." autofocus autocomplete="off" style="cursor: pointer; text-align: center;"/>
       
       <br>
       <button id="btnModoManual" class="btn-azul" style="margin-top: 15px; width: 80%; max-width: 400px;">
@@ -36,62 +48,66 @@
       <p style="font-size: 1.2em; font-weight: bold;">📝 Datos del Visitante</p>
       <div class="formulario-destino">
           
-        <select id="tipoDocSelect" style="width: 80%; max-width: 400px; font-weight: bold;">
+        <select id="tipoDocSelect" style="width: 80%; max-width: 400px; font-weight: bold; padding: 8px;">
         {% for t in tipos_doc %}
           <option value="{{ t.id }}">{{ t.sigla }} - {{ t.nombre }}</option>
         {% endfor %}
-        </select><br>
+        </select>
 
-          <div class="form-group" style="width: 100%;">
+          <div class="form-group">
               <label>Número de Documento:</label>
-              <input type="text" id="docManualInput" required style="font-weight: bold; color: #007bff;">
+              <input type="text" id="docManualInput" required style="font-weight: bold; color: #007bff; padding: 8px;">
           </div>
           
-          <div class="form-group" style="width: 100%;">
+          <div class="form-group">
               <label>Nombre Completo:</label>
-              <input type="text" id="nombreManualInput" placeholder="Ej: Juan Perez" required>
+              <input type="text" id="nombreManualInput" placeholder="Ej: JUAN PEREZ" required style="padding: 8px; text-transform: uppercase;">
           </div>
           
-          <button id="btnContinuarManual" class="btn-verde btn-w200">Continuar a Destino ➡️</button>
-          <button id="btnCancelarManual" class="btn-danger btn-w200">Cancelar</button>
+          <div style="margin-top: 10px;">
+            <button id="btnContinuarManual" class="btn-verde btn-w200">Continuar a Destino ➡️</button>
+            <button id="btnCancelarManual" class="btn-danger btn-w200">Cancelar</button>
+          </div>
       </div>
     </div>
 
     <div id="paso-apto" style="display: none">
       <p style="font-size: 1.2em; font-weight: bold;">2. Selecciona el destino</p>
       <div class="formulario-destino">
-        <div class="form-group" style="text-align: center;">
+        <div class="form-group">
           <label for="unidadSelect">{{ session.get('nom_bloque', 'Unidad') }}:</label>
-          <select id="unidadSelect"></select>
+          <select id="unidadSelect" style="padding: 8px;"></select>
         </div>
-        <div class="form-group" style="text-align: center;">
+        <div class="form-group">
           <label for="subunidadSelect">{{ session.get('nom_unidad', 'Subunidad') }}:</label>
-          <select id="subunidadSelect">
+          <select id="subunidadSelect" style="padding: 8px;">
             <option value="">Seleccione {{ session.get('nom_bloque', 'Unidad') }} primero</option>
           </select>
         </div>
         <div class="form-group">
           <label>Observaciones</label>
-          <input type="text" id="obsInput" placeholder="Ej: Viene a trasteo..." style="width: 100%; max-width: 380px;" />
+          <input type="text" id="obsInput" placeholder="Ej: Viene a trasteo..." style="padding: 8px;" />
         </div>
-        <div class="form-group">
+        <div class="form-group" style="align-items: flex-start;">
           <label>Acompañantes:</label>
-          <input type="number" id="acompInput" value="0" min="0" max="100" style="width: 80px; text-align: center; font-weight: bold;" />
+          <input type="number" id="acompInput" value="0" min="0" max="100" style="width: 80px; text-align: center; font-weight: bold; padding: 8px;" />
         </div>
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; width: 100%; text-align: left;">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; width: 100%; max-width: 400px; text-align: left;">
           <label style="cursor: pointer; font-size: 1.1em">
             <input type="checkbox" id="vehiculoCheck" style="transform: scale(1.3); margin-right: 8px" />
             <strong>¿Ingresa en vehículo?</strong>
           </label><br />
-          <input type="text" id="placaInput" placeholder="PLACA (Ej: ABC-123)" style="display: none; width: 100%; max-width: 200px; text-transform: uppercase; font-weight: bold; text-align: center;" />
+          <input type="text" id="placaInput" placeholder="PLACA (Ej: ABC-123)" style="display: none; width: 100%; margin-top: 10px; text-transform: uppercase; font-weight: bold; text-align: center; padding: 8px;" />
         </div>
         
-        <button id="btnGuardar" class="btn-w200">Registrar Ingreso</button>
-        <button id="btnCancelar" class="btn-danger btn-w200">Cancelar</button>
+        <div style="margin-top: 10px;">
+          <button id="btnGuardar" class="btn-verde btn-w200">Registrar Ingreso</button>
+          <button id="btnCancelar" class="btn-danger btn-w200">Cancelar</button>
+        </div>
       </div>
     </div>
 
-    <div id="resultado">
+    <div id="resultado" style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
       <h3 style="margin-top: 0;">Último ingreso procesado:</h3>
       <p id="info-registro" style="font-size: 18px; color: #333">Esperando primer registro del turno...</p>
     </div>
@@ -102,7 +118,81 @@
       const selectUnidad = document.getElementById("unidadSelect");
       const selectSubunidad = document.getElementById("subunidadSelect");
       const selectTipoDoc = document.getElementById("tipoDocSelect");
+      const infoRegistro = document.getElementById("info-registro");
+      const pasoEscaner = document.getElementById("paso-escaner");
+      const inputEscaner = document.getElementById("escanerInput");
+      const pasoApto = document.getElementById("paso-apto");
+      const comText = document.getElementById("comText");
 
+      let tramaTemporal = "";
+      let esIngresoManual = false;
+      let documentoFinal = "";
+      let nombreFinal = "";
+
+      // --- LÓGICA WEB SERIAL (PUERTO COM) ---
+      let puerto;
+      let lector;
+
+      async function conectarLectorCOM() {
+        try {
+          puerto = await navigator.serial.requestPort();
+          await puerto.open({ baudRate: 9600 });
+          
+          comText.innerText = "✅ Lector Conectado y Listo (COM)";
+          comText.style.color = "#28a745";
+          inputEscaner.placeholder = "Escáner activo. Pase la cédula...";
+          inputEscaner.style.cursor = "text";
+
+          const decoder = new TextDecoderStream();
+          puerto.readable.pipeTo(decoder.writable);
+          lector = decoder.readable.getReader();
+
+          escucharLector();
+        } catch (err) {
+          console.error("Error al conectar puerto serial:", err);
+          alert("No se pudo conectar el escáner. Asegúrate de seleccionarlo en la lista y dar permisos.");
+        }
+      }
+
+      async function escucharLector() {
+        let buffer = "";
+        while (true) {
+          const { value, done } = await lector.read();
+          if (done) break;
+          if (value) {
+            buffer += value;
+            // Si llega un fin de línea o enter
+            if (buffer.includes('\r') || buffer.includes('\n')) {
+                
+                // 1. Convertimos los Nulos de la Registraduría en espacios
+                let limpia = buffer.replace(/\x00/g, " ");
+                // 2. Eliminamos el resto de la basura de control ASCII
+                limpia = limpia.replace(/[\x01-\x1F\x7F-\x9F]/g, "");
+                // 3. Colapsamos espacios múltiples en uno solo
+                limpia = limpia.replace(/\s+/g, " ").trim();
+
+                if (limpia !== "") {
+                    procesarEntradaEscaner(limpia);
+                }
+                buffer = "";
+            }
+          }
+        }
+      }
+
+      function procesarEntradaEscaner(trama) {
+          tramaTemporal = trama;
+          inputEscaner.value = trama; // Feedback visual opcional
+          pasoEscaner.style.display = "none";
+          pasoApto.style.display = "block";
+          setTimeout(() => selectUnidad.focus(), 150);
+      }
+
+      // UX: Conectar intencionalmente
+      comText.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
+      inputEscaner.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
+
+      // --- LÓGICA DE NEGOCIO ---
       function cargarUnidades() {
         fetch("/api/unidades").then(res => res.json()).then(data => {
             selectUnidad.innerHTML = `<option value="">Seleccione ${nomBloque}...</option>`;
@@ -120,77 +210,46 @@
         });
       });
 
-      let tramaTemporal = "";
-      const pasoEscaner = document.getElementById("paso-escaner");
-      const inputEscaner = document.getElementById("escanerInput");
-      const pasoApto = document.getElementById("paso-apto");
-      const infoRegistro = document.getElementById("info-registro");
-
-      let esIngresoManual = false;
-      let documentoFinal = "";
-      let nombreFinal = "";
-
       const btnModoManual = document.getElementById("btnModoManual");
       const pasoDatosManuales = document.getElementById("paso-datos-manuales");
       const docManualInput = document.getElementById("docManualInput");
       const nombreManualInput = document.getElementById("nombreManualInput");
       const btnContinuarManual = document.getElementById("btnContinuarManual");
       const btnCancelarManual = document.getElementById("btnCancelarManual");
+      const btnGuardar = document.getElementById("btnGuardar");
 
-      // 1. Cuando hacen clic en "No tengo escáner"
       btnModoManual.addEventListener("click", function () {
         esIngresoManual = true; 
         pasoEscaner.style.display = "none"; 
         pasoDatosManuales.style.display = "block"; 
-        
         docManualInput.value = inputEscaner.value.trim();
-        
-        if (docManualInput.value === "") {
-          docManualInput.focus(); 
-        } else {
-          nombreManualInput.focus(); 
-        }
+        docManualInput.value === "" ? docManualInput.focus() : nombreManualInput.focus();
       });
 
-      // 2. Cuando se arrepienten y le dan a "Cancelar"
-      btnCancelarManual.addEventListener("click", function () {
-        esIngresoManual = false;
-        docManualInput.value = "";
-        nombreManualInput.value = "";
-        inputEscaner.value = "";
-        
-        pasoDatosManuales.style.display = "none";
-        pasoEscaner.style.display = "block";
-        inputEscaner.focus();
-      });
+      btnCancelarManual.addEventListener("click", reiniciarPantalla);
 
-      // 3. Cuando llenan el nombre y le dan a "Continuar a Destino"
       btnContinuarManual.addEventListener("click", function () {
         documentoFinal = docManualInput.value.trim();
         nombreFinal = nombreManualInput.value.trim().toUpperCase(); 
-
         if (documentoFinal === "" || nombreFinal === "") {
-          alert("⚠️ Por favor, completa el documento y el nombre del visitante.");
+          alert("⚠️ Por favor, completa el documento y el nombre.");
           return;
         }
-
         pasoDatosManuales.style.display = "none";
         pasoApto.style.display = "block";
       });
 
+      // Mantenemos soporte por si usan teclado
       inputEscaner.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
-          tramaTemporal = inputEscaner.value;
-          if (tramaTemporal.trim() === "") return;
-          pasoEscaner.style.display = "none";
-          pasoApto.style.display = "block";
+          if (inputEscaner.value.trim() !== "") {
+              procesarEntradaEscaner(inputEscaner.value);
+          }
         }
       });
 
-      //selectTipoDoc.addEventListener("change", () => inputEscaner.focus());
-      document.getElementById("btnGuardar").addEventListener("click", function () {
-          // 1. Validaciones originales de la Torre/Apto y Vehículo
+      btnGuardar.addEventListener("click", function () {
           if (selectUnidad.value === "" || selectSubunidad.value === "") { 
               alert(`⚠️ Debes seleccionar ${nomBloque} y ${nomUnidad}.`); 
               return; 
@@ -203,21 +262,24 @@
               return; 
           }
 
-          // 🛡️ NUEVO ESCUDO: Si es manual, verificamos que la memoria NO esté vacía antes de enviar
           if (esIngresoManual && (documentoFinal === "" || nombreFinal === "")) {
-              alert("❌ Error interno: Los datos del visitante se perdieron. Por favor, vuelve a escribirlos.");
+              alert("❌ Los datos se perdieron. Reintente.");
               reiniciarPantalla();
               return;
           }
 
-          infoRegistro.innerHTML = "<b>⌛ Procesando en la nube...</b>";
-          const idTipoDocumento = esIngresoManual ? document.getElementById("tipoDocSelect").value : 1;
+          // 🛡️ BLOQUEO ANTI-DUPLICADOS
+          btnGuardar.disabled = true;
+          btnGuardar.innerText = "⏳ Guardando...";
+          infoRegistro.innerHTML = "<b>⌛ Procesando en el servidor...</b>";
+
+          const idTipoDocumento = esIngresoManual ? selectTipoDoc.value : 1;
           
           const payload = {
             es_manual: esIngresoManual, 
             trama: tramaTemporal, 
             documento_manual: documentoFinal, 
-            nombre_manual: nombreFinal,       
+            nombre_manual: nombreFinal,      
             tipo_doc_id: idTipoDocumento, 
             apartamento: `${selectUnidad.options[selectUnidad.selectedIndex].text} - ${selectSubunidad.value}`,
             vehiculo: vaEnVehiculo, 
@@ -226,53 +288,60 @@
             acompanantes: parseInt(document.getElementById('acompInput').value) || 0
           };
 
-          // 🕵️‍♂️ HERRAMIENTA DE DEBUG: Esto imprimirá en la consola oculta de tu navegador lo que se está enviando
-          console.log("📦 PAQUETE QUE VIAJA A PYTHON:", payload);
-
           fetch("/registrar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
               if (data.mensaje === "ok") {
                 const iconoVehiculo = data.vehiculo === 1 ? "🚗" : "🚶";
-                const infoVehiculo = data.vehiculo === 1 ? `<b>Placa:</b> ${data.placa}` : "Peatón";
-                infoRegistro.innerHTML = `<div style="color: #28a745; font-weight: bold; margin-bottom: 5px;">✅ REGISTRO EXITOSO</div><b>Destino:</b> ${data.apartamento}<br><b>Visitante:</b> ${data.nombre} (${data.numero_documento})<br><b>Transporte:</b> ${iconoVehiculo} ${infoVehiculo}<br><div style="margin-top: 5px; font-size: 0.9em; color: #666;"><b>Obs:</b> ${data.observaciones || "---"}</div>`;
+                infoRegistro.innerHTML = `<div style="color: #28a745; font-weight: bold; margin-bottom: 5px;">✅ REGISTRO EXITOSO</div><b>Destino:</b> ${data.apartamento}<br><b>Visitante:</b> ${data.nombre}<br><b>Transporte:</b> ${iconoVehiculo} ${data.placa || "Peatón"}`;
                 reiniciarPantalla();
-              } else { infoRegistro.innerHTML = `<div style="color: #dc3545;">❌ Error: ${data.error}</div>`; }
-            }).catch(() => infoRegistro.innerText = "❌ Error crítico de conexión");
-        });
+              } else { 
+                infoRegistro.innerHTML = `<div style="color: #dc3545;">❌ Error: ${data.error}</div>`; 
+                liberarBotonGuardar();
+              }
+            }).catch(() => {
+                infoRegistro.innerText = "❌ Error crítico de conexión";
+                liberarBotonGuardar();
+            });
+      });
 
-      function reiniciarPantalla() {
-        // --- FIX: RESETEAR LA MEMORIA MANUAL ---
-        esIngresoManual = false;
-        documentoFinal = "";
-        nombreFinal = "";
-        docManualInput.value = "";
-        nombreManualInput.value = "";
-        // ---------------------------------------
-
-        inputEscaner.value = ""; selectUnidad.selectedIndex = 0;
-        selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`;
-        selectTipoDoc.selectedIndex = 0; 
-        document.getElementById("vehiculoCheck").checked = false;
-        document.getElementById("placaInput").value = ""; document.getElementById("placaInput").style.display = "none";
-        document.getElementById("obsInput").value = ""; document.getElementById('acompInput').value = "0";
-        
-        // Escondemos todas las pantallas secundarias por si acaso
-        document.getElementById("paso-datos-manuales").style.display = "none";
-        pasoApto.style.display = "none"; 
-        
-        // Mostramos solo el escáner y le ponemos el foco
-        pasoEscaner.style.display = "block";
-        setTimeout(() => inputEscaner.focus(), 100);
+      function liberarBotonGuardar() {
+          btnGuardar.disabled = false;
+          btnGuardar.innerText = "Registrar Ingreso";
       }
 
-      document.addEventListener("click", (e) => { if (pasoEscaner.style.display !== "none" && !["A", "SELECT", "OPTION", "INPUT"].includes(e.target.tagName)) inputEscaner.focus(); });
-      cargarUnidades();
+      function reiniciarPantalla() {
+        esIngresoManual = false;
+        documentoFinal = ""; nombreFinal = ""; tramaTemporal = "";
+        docManualInput.value = ""; nombreManualInput.value = ""; inputEscaner.value = "";
+        
+        selectUnidad.selectedIndex = 0;
+        selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`;
+        document.getElementById("vehiculoCheck").checked = false;
+        document.getElementById("placaInput").value = ""; 
+        document.getElementById("placaInput").style.display = "none";
+        document.getElementById("obsInput").value = ""; 
+        document.getElementById('acompInput').value = "0";
+        
+        liberarBotonGuardar();
+
+        pasoDatosManuales.style.display = "none";
+        pasoApto.style.display = "none"; 
+        pasoEscaner.style.display = "block";
+        
+        setTimeout(() => inputEscaner.focus(), 150);
+      }
+
+      document.getElementById("btnCancelar").addEventListener("click", reiniciarPantalla);
+
       document.getElementById("vehiculoCheck").addEventListener("change", function () {
         const placa = document.getElementById("placaInput");
         placa.style.display = this.checked ? "block" : "none";
-        if(this.checked) placa.focus(); else placa.value = "";
+        if(this.checked) placa.focus();
       });
+
+      // Inicialización
+      cargarUnidades();
     </script>
   </body>
 </html>

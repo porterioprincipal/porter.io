@@ -7,7 +7,7 @@ import pytz
 from werkzeug.security import generate_password_hash, check_password_hash
 import csv
 from io import StringIO
-from flask import Response # Asegúrate de que Response esté importado de flask junto con render_template, request, etc.
+from flask import Response 
 
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
@@ -77,14 +77,9 @@ def login_master():
         
         if admin_db and check_password_hash(admin_db['password'], p):
             session['is_superadmin'] = True
-            
-            # EL FIX: Convertimos la fila de SQLite a un diccionario de Python
             admin_dict = dict(admin_db)
-            
-            # Ahora usamos el diccionario que sí soporta .get()
             session['admin_nombre'] = admin_dict.get('nombre_completo') or 'Admin' 
             session['admin_doc'] = f"{admin_dict.get('tipo_sigla') or 'CC'} {admin_dict.get('numero_documento') or ''}".strip()
-            
             return redirect(url_for('superadmin'))
         
         error = "Credenciales maestras incorrectas."
@@ -107,13 +102,9 @@ def superadmin():
         ORDER BY cp.nombre_cliente ASC, u.rol DESC
     '''
     usuarios_globales = conexion.execute(query_usuarios).fetchall()
-    
     conexion.close()
     
-    # NUEVO: Calculamos la fecha de hoy en formato texto (YYYY-MM-DD) para el HTML
     hoy_str = datetime.now(bogota_tz).strftime('%Y-%m-%d')
-    
-    # La pasamos a la plantilla
     return render_template('superadmin.html', conjuntos=conjuntos, usuarios_globales=usuarios_globales, hoy=hoy_str)
 
 @app.route('/superadmin/agregar', methods=['POST'])
@@ -159,7 +150,6 @@ def superadmin_crear_admin():
     d = request.form
     conexion = sqlite3.connect(DB_PATH)
     hash_p = generate_password_hash(d['password'])
-    # Se inyecta 1 (CC) por defecto para los nuevos admins de conjunto
     conexion.execute("INSERT INTO usuarios (nombres, apellidos, empresa, tipo_identificacion, numero_identificacion, username, password, rol, nit_conjunto) VALUES (?,?,'Admin',1,?,?,?,'administrador',?)", (d['nombres'], d['apellidos'], d['cedula'], d['username'], hash_p, d['nit_conjunto']))
     conexion.commit(); conexion.close()
     return redirect(url_for('superadmin'))
@@ -186,16 +176,13 @@ def login():
         
         if user_db and check_password_hash(user_db['password'], p):
             nit = user_db['nit_conjunto']
-            
-            # FIX 1: Le agregamos 'nombre_cliente' a la consulta SQL
             c_db = conexion.execute('SELECT nombre_cliente, nom_bloque, nom_unidad FROM control_pago WHERE nit = ?', (nit,)).fetchone()
             
-            # FIX 2: Metemos ese dato en la sesión para que el HTML lo pueda leer
             session.update({
                 'usuario': u, 
                 'rol': user_db['rol'], 
                 'nit_conjunto': nit, 
-                'nom_cliente': c_db['nombre_cliente'], # AQUÍ ESTÁ LA MAGIA
+                'nom_cliente': c_db['nombre_cliente'], 
                 'nom_bloque': c_db['nom_bloque'], 
                 'nom_unidad': c_db['nom_unidad'], 
                 'turno_guardado': obtener_turno_actual(),
@@ -221,7 +208,6 @@ def logout():
 def index():
     conexion = sqlite3.connect(DB_PATH)
     conexion.row_factory = sqlite3.Row
-    # Mandamos los tipos de documento al index para el formulario manual
     tipos_doc = conexion.execute("SELECT id, sigla, nombre FROM tipos_documento ORDER BY id ASC").fetchall()
     conexion.close()
     return render_template('index.html', usuario_actual=session['usuario'], rol_actual=session['rol'], tipos_doc=tipos_doc)
@@ -237,13 +223,10 @@ def registrar():
     placa = datos.get('placa', '').upper()
     acomp = datos.get('acompanantes', 0)
     observaciones = datos.get('observaciones', '')
-    
-    # ¿Cómo ingresó el visitante?
     es_manual = datos.get('es_manual', False)
 
     try:
         if es_manual:
-            # ✍️ LÓGICA MANUAL
             numero_doc = datos.get('documento_manual', '').strip()
             nombre = datos.get('nombre_manual', '').strip()
             tipo_doc_id = datos.get('tipo_doc_id', 1)
@@ -251,24 +234,38 @@ def registrar():
             if not numero_doc or not nombre:
                 return jsonify({'error': 'Faltan datos en el ingreso manual'}), 400
         else:
-            # 🔫 LÓGICA ESCÁNER
             trama = datos.get('trama', '')
-            if "PubDSK" in trama:
-                t_u = trama.split("PubDSK")[-1].strip("_") 
-                m_c = re.search(r'(\d+)', t_u)
-                numero_doc = m_c.group(1).lstrip('0') if m_c else ""
-                m_n = re.search(r'([A-ZÑ\s]+?)(?=\d)', t_u[m_c.end():]) if m_c else None
-                nombre = " ".join(m_n.group(1).split()).strip() if m_n else "VISITANTE"
-            else:
-                numero_doc = ''.join(filter(str.isdigit, trama))
-                nombre = "VISITANTE"
             
+            # --- 🛡️ LA NUEVA PODADORA DE TRAMAS ---
+            # Busca al menos 12 caracteres de Letras, Ñ y ESPACIOS
+            match_nom = re.search(r'([A-ZÑ\s]{12,})', trama) 
+            
+            if match_nom:
+                nombre_crudo = match_nom.group(1).strip()
+                # Colapsamos los espacios múltiples que hayan quedado
+                nombre = re.sub(r'\s+', ' ', nombre_crudo) 
+                
+                punto_donde_empieza_el_nombre = match_nom.start()
+                texto_antes_del_nombre = trama[:punto_donde_empieza_el_nombre]
+                
+                match_doc = re.search(r'(\d{8,10})$', texto_antes_del_nombre.strip())
+                
+                if match_doc:
+                    # Quitamos ceros a la izquierda (Ej: 0015042634 -> 15042634)
+                    numero_doc = match_doc.group(1).lstrip("0")
+                else:
+                    match_doc_alt = re.search(r'(\d+)\s*$', texto_antes_del_nombre.strip())
+                    numero_doc = match_doc_alt.group(1).lstrip("0") if match_doc_alt else "000"
+            else:
+                match_fallback = re.search(r'(\d{8,10})', trama)
+                numero_doc = match_fallback.group(1).lstrip("0") if match_fallback else "000"
+                nombre = "VISITANTE"
+
             tipo_doc_id = 1 
 
         conexion = sqlite3.connect(DB_PATH)
         hora = datetime.now(bogota_tz).strftime('%Y-%m-%d %H:%M:%S')
         
-        # 💾 INSERTAMOS DIRECTO SIN VALIDAR SI YA ESTÁ ADENTRO
         conexion.execute('''INSERT INTO visitas 
             (tipo_doc_id, numero_documento, nombre_completo, apartamento, portero, fecha_hora, nit_conjunto, vehiculo, placa, acompanantes, observaciones, estado) 
             VALUES (?,?,?,?,?,?,?,?,?,?,?,'activo')''', 
@@ -294,7 +291,6 @@ def registrar():
 def historial():
     conexion = sqlite3.connect(DB_PATH)
     conexion.row_factory = sqlite3.Row 
-    # JOIN para mostrar "CE", "PPT", "CC" en la tabla HTML
     query = """
         SELECT v.*, t.sigla as tipo_sigla
         FROM visitas v
@@ -322,14 +318,11 @@ def admin_panel():
     if session.get('rol') != 'administrador': return redirect(url_for('index'))
     conexion = sqlite3.connect(DB_PATH); conexion.row_factory = sqlite3.Row
     
-    # 1. Buscamos todas las unidades y subunidades del conjunto
     unidades_db = conexion.execute("SELECT * FROM unidades WHERE nit_conjunto = ?", (session['nit_conjunto'],)).fetchall()
     subunidades_db = conexion.execute("SELECT * FROM subunidades WHERE nit_conjunto = ?", (session['nit_conjunto'],)).fetchall()
     
-    # 2. Armamos la estructura jerárquica (Unidad -> [Subunidades])
     estructura = []
     for u in unidades_db:
-        # Filtramos las subunidades que pertenecen a esta unidad específica
         subs = [s for s in subunidades_db if s['unidad_id'] == u['id']]
         estructura.append({
             'id': u['id'],
@@ -338,10 +331,8 @@ def admin_panel():
             'subunidades': subs
         })
 
-    # Mandamos los tipos de documento al admin.html para el select de "Crear Usuario"
     tipos_doc = conexion.execute("SELECT id, sigla, nombre FROM tipos_documento ORDER BY id ASC").fetchall()
     
-    # JOIN para mostrar "CE", "PPT" en la lista de porteros
     query_usrs = """
         SELECT u.*, t.sigla as tipo_sigla
         FROM usuarios u
@@ -351,7 +342,6 @@ def admin_panel():
     usrs = conexion.execute(query_usrs, (session['nit_conjunto'],)).fetchall()
     conexion.close()
     
-    # IMPORTANTE: Pasamos 'estructura' y también 'unidades_db' (este último para el select del formulario)
     return render_template('admin.html', estructura=estructura, unidades=unidades_db, usuarios=usrs, tipos_doc=tipos_doc, usuario_actual=session['usuario'])
 
 @app.route('/admin/crear_usuario', methods=['POST'])
@@ -360,26 +350,21 @@ def crear_usuario():
     d = request.form
     conexion = sqlite3.connect(DB_PATH)
     h = generate_password_hash(d['password'])
-    # Aquí asumimos que d['tipo_identificacion'] vendrá como el número (ID) desde el <select> en HTML
     conexion.execute('INSERT INTO usuarios (nombres, apellidos, empresa, tipo_identificacion, numero_identificacion, username, password, rol, nit_conjunto) VALUES (?,?,?,?,?,?,?,?,?)', (d['nombres'], d['apellidos'], d['empresa'], d['tipo_identificacion'], d['numero_identificacion'], d['username'], h, d['rol'], session['nit_conjunto']))
     conexion.commit(); conexion.close()
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/descargar_historial', methods=['POST'])
 def descargar_historial():
-    # 1. Seguridad: Solo administradores
     if session.get('rol') != 'administrador':
         return redirect(url_for('index'))
 
-    # 2. Recibir las fechas del formulario
     fecha_inicio = request.form.get('fecha_inicio')
     fecha_fin = request.form.get('fecha_fin')
 
     if not fecha_inicio or not fecha_fin:
         return "Las fechas son requeridas", 400
 
-    # 💡 TRUCO PRO: Añadimos las horas para que abarque los días completos
-    # Si piden del 10 al 12, buscamos desde el 10 a las 00:00:00 hasta el 12 a las 23:59:59
     inicio_full = f"{fecha_inicio} 00:00:00"
     fin_full = f"{fecha_fin} 23:59:59"
 
@@ -387,7 +372,6 @@ def descargar_historial():
         conexion = sqlite3.connect(DB_PATH)
         conexion.row_factory = sqlite3.Row
         
-        # 3. Buscamos los registros en ese rango de fechas
         query = '''
             SELECT v.fecha_hora, t.sigla as tipo_doc, v.numero_documento, v.nombre_completo, 
                 v.apartamento, v.vehiculo, v.placa, v.acompanantes, v.observaciones, 
@@ -400,15 +384,10 @@ def descargar_historial():
         registros = conexion.execute(query, (session['nit_conjunto'], inicio_full, fin_full)).fetchall()
         conexion.close()
 
-        # 4. Fabricar el archivo Excel (CSV) en la memoria RAM
         si = StringIO()
-        # Usamos punto y coma (;) porque el Excel en español lo lee mejor que la coma (,)
         cw = csv.writer(si, delimiter=';') 
-        
-        # Escribimos la fila de los títulos (Cabecera)
         cw.writerow(['Fecha y Hora', 'Tipo Doc', 'Documento', 'Visitante', 'Destino', 'Vehiculo', 'Placa', 'Acompanantes', 'Observaciones', 'Portero', 'Estado', 'Motivo Anulacion'])
         
-        # Escribimos los datos de cada visita
         for r in registros:
             vehiculo_str = "SI" if r['vehiculo'] == 1 else "NO"
             cw.writerow([
@@ -417,10 +396,7 @@ def descargar_historial():
                 r['observaciones'] or '', r['portero'], r['estado'], r['motivo_anulacion'] or ''
             ])
 
-        # 5. Empaquetar y enviar el archivo al navegador para que inicie la descarga
         output = si.getvalue()
-        
-        # Añadir BOM para que Excel lea los tildes y las ñ correctamente
         output_con_utf8_bom = '\ufeff' + output 
 
         return Response(
