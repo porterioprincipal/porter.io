@@ -9,9 +9,16 @@
       .input-escaner:focus { border: 3px solid #28a745; outline: none; box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); }
       .btn-verde { background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
       .btn-verde:disabled { background-color: #6c757d; cursor: not-allowed; }
+      .btn-azul { background-color: #007bff; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+      .btn-danger { background-color: #dc3545; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
       .btn-w200 { width: 200px; margin: 5px; }
       .formulario-destino { display: flex; flex-direction: column; align-items: center; gap: 15px; }
       .form-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; text-align: left; }
+      
+      .modo-selector { display: flex; gap: 0; max-width: 500px; margin: 0 auto 30px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fff; }
+      .modo-btn { flex: 1; padding: 15px; border: none; cursor: pointer; font-weight: bold; background: #f8f9fa; color: #666; transition: 0.3s; }
+      .modo-btn.activo { background: #28a745; color: white; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); }
+      .modo-btn-paquete.activo { background: #17a2b8; color: white; }
     </style>
   </head>
   <body class="body-index">
@@ -25,339 +32,124 @@
       <a href="{{ url_for('auth.logout') }}" style="color: #dc3545; text-decoration: none; font-weight: bold; margin-left: 15px;">🚪 Salir</a>
     </div>
 
-    <p>Usuario: <strong>{{ usuario_actual }}</strong> Rol: <span class="badge badge-rol">{{ rol_actual }}</span></p>
-    
-    <div id="status-com" style="font-size: 0.9em; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: inline-block;">
-        Lector: <span id="comText" style="font-weight: bold; color: #dc3545; cursor: pointer;">🔴 Desconectado (Haz clic aquí para activar)</span>
+    <p>Usuario: <strong>{{ usuario_actual }}</strong> | Rol: <span class="badge badge-rol">{{ rol_actual }}</span></p>
+
+    <div class="modo-selector">
+        <button id="btnModoVisita" class="modo-btn activo">🚶 VISITANTES</button>
+        <button id="btnModoPaquete" class="modo-btn modo-btn-paquete">📦 PAQUETERÍA</button>
     </div>
 
     <hr style="width: 50%; border: 0; border-top: 1px solid #ccc; margin: 10px auto 20px auto;" />
 
-    <div id="paso-escaner">
-      <p style="font-size: 1.2em; font-weight: bold;">1. Identificación del Visitante</p>
-      <input type="text" id="escanerInput" class="input-escaner" placeholder="Haz clic aquí para conectar el escáner..." autofocus autocomplete="off" style="cursor: pointer; text-align: center;"/>
-      <br>
-      <button id="btnModoManual" class="btn-azul" style="margin-top: 15px; width: 80%; max-width: 400px;">
-        ✍️ No tengo escáner (Ingreso Manual)
-      </button>
+    <div id="modulo-visitantes">
+        <div class="form-group" style="margin: 0 auto 15px auto; align-items: center;">
+            <label style="font-weight: bold;">Tipo de Visita:</label>
+            <select id="tipoVisitaSelect" style="padding: 10px; width: 100%; max-width: 400px; font-weight: bold; border-radius: 5px; border: 2px solid #28a745;">
+                <option value="Social">🏠 Social / Familiar</option>
+                <option value="Mantenimiento">🔧 Mantenimiento / Técnico</option>
+                <option value="Servicios Publicos">⚡ Servicios Públicos (Vanti, Codensa...)</option>
+            </select>
+        </div>
+
+        <div id="status-com" style="font-size: 0.9em; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: inline-block;">
+            Lector: <span id="comText" style="font-weight: bold; color: #dc3545; cursor: pointer;">🔴 Desconectado (Haz clic para conectar)</span>
+        </div>
+
+        <div id="paso-escaner">
+          <p><strong>1. Identificación:</strong></p>
+          <input type="text" id="escanerInput" class="input-escaner" placeholder="Pase la cédula por el lector Yunew..." autofocus autocomplete="off" style="text-align: center; width: 100%; max-width: 400px; padding: 15px;"/>
+          <br>
+          <button id="btnModoManual" class="btn-azul" style="margin-top: 15px; width: 80%; max-width: 400px;">✍️ Ingreso Manual</button>
+        </div>
+
+        <div id="paso-datos-manuales" style="display: none; margin-top: 20px;">
+          <div class="formulario-destino">
+            <select id="tipoDocSelect" style="width: 100%; max-width: 400px; padding: 10px; font-weight: bold;">
+              {% for t in tipos_doc %}<option value="{{ t.id }}">{{ t.sigla }} - {{ t.nombre }}</option>{% endfor %}
+            </select>
+            <input type="text" id="docManualInput" placeholder="Número de Documento" style="padding: 10px; width: 100%; max-width: 400px;">
+            <input type="text" id="nombreManualInput" placeholder="Nombre Completo" style="padding: 10px; width: 100%; max-width: 400px; text-transform: uppercase;">
+            <div>
+              <button id="btnContinuarManual" class="btn-verde btn-w200">Continuar ➡️</button>
+              <button id="btnCancelarManual" class="btn-danger btn-w200">Cancelar</button>
+            </div>
+          </div>
+        </div>
     </div>
 
-    <div id="paso-datos-manuales" style="display: none; margin-top: 20px;">
-      <p style="font-size: 1.2em; font-weight: bold;">📝 Datos del Visitante</p>
-      <div class="formulario-destino">
-        <select id="tipoDocSelect" style="width: 80%; max-width: 400px; font-weight: bold; padding: 8px;">
-        {% for t in tipos_doc %}
-          <option value="{{ t.id }}">{{ t.sigla }} - {{ t.nombre }}</option>
-        {% endfor %}
-        </select>
-          <div class="form-group">
-              <label>Número de Documento:</label>
-              <input type="text" id="docManualInput" required style="font-weight: bold; color: #007bff; padding: 8px;">
-          </div>
-          <div class="form-group">
-              <label>Nombre Completo:</label>
-              <input type="text" id="nombreManualInput" placeholder="Ej: JUAN PEREZ" required style="padding: 8px; text-transform: uppercase;">
-          </div>
-          <div style="margin-top: 10px;">
-            <button id="btnContinuarManual" class="btn-verde btn-w200">Continuar a Destino ➡️</button>
-            <button id="btnCancelarManual" class="btn-danger btn-w200">Cancelar</button>
-          </div>
-      </div>
+    <div id="zona-paquete" style="display: none;">
+        <div class="formulario-destino">
+            <p style="font-weight: bold;">1. Datos del Envío:</p>
+            <input type="text" id="empresaPaquete" list="opcionesEmpresa" placeholder="Empresa (Servientrega, Rappi, etc.)" style="padding: 12px; width: 100%; max-width: 400px; font-weight: bold; border: 2px solid #17a2b8; border-radius: 5px;">
+            <datalist id="opcionesEmpresa">
+                <option value="Mercado Libre"><option value="Servientrega"><option value="Interrapidisimo"><option value="Coordinadora"><option value="Amazon"><option value="Rappi"><option value="Otro"></option>
+            </datalist>
+
+            <input type="text" id="repartidorPaquete" placeholder="Nombre Repartidor / Guía" style="padding: 10px; width: 100%; max-width: 400px; text-transform: uppercase;">
+
+            <div style="background: #000; padding: 10px; border-radius: 8px; width: 100%; max-width: 400px;">
+                <div style="border: 2px dashed #666; height: 250px; position: relative; overflow: hidden;">
+                    <video id="videoCamara" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <canvas id="canvasFoto" style="display: none; width: 100%; height: 100%; object-fit: cover;"></canvas>
+                </div>
+                <button id="btnTomarFoto" class="btn-azul" style="width: 100%; margin-top: 10px;">🔴 Capturar Foto del Paquete</button>
+                <button id="btnRepetirFoto" class="btn-danger" style="display: none; width: 100%; margin-top: 10px;">🔄 Tomar otra foto</button>
+            </div>
+            
+            <button id="btnContinuarPaquete" class="btn-verde btn-w200" style="margin-top: 15px;">Continuar a Destino ➡️</button>
+        </div>
     </div>
 
-    <div id="paso-apto" style="display: none">
-      <p style="font-size: 1.2em; font-weight: bold;">2. Selecciona el destino</p>
-      <div class="formulario-destino">
+    <div id="paso-apto" style="display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px;">
+      <div class="formulario-destino" style="background: #f1f3f5; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        <h3 style="margin-top: 0; color: #333;">2. Selección de Destino</h3>
         <div class="form-group">
-          <label for="unidadSelect">{{ session.get('nom_bloque', 'Unidad') }}:</label>
-          <select id="unidadSelect" style="padding: 8px;"></select>
+          <label>{{ session.get('nom_bloque', 'Bloque') }}:</label>
+          <select id="unidadSelect" style="padding: 12px; font-size: 1.1em; font-weight: bold;"></select>
         </div>
         <div class="form-group">
-          <label for="subunidadSelect">{{ session.get('nom_unidad', 'Subunidad') }}:</label>
-          <select id="subunidadSelect" style="padding: 8px;">
-            <option value="">Seleccione {{ session.get('nom_bloque', 'Unidad') }} primero</option>
+          <label>{{ session.get('nom_unidad', 'Unidad') }}:</label>
+          <select id="subunidadSelect" style="padding: 12px; font-size: 1.1em; font-weight: bold;">
+            <option value="">Seleccione primero...</option>
           </select>
         </div>
+        
+        <div id="extrasVisitante" style="width: 100%; max-width: 400px; text-align: left;">
+            <div class="form-group">
+                <label>Acompañantes:</label>
+                <input type="number" id="acompInput" value="0" min="0" style="width: 80px; padding: 8px; text-align: center; font-weight: bold;">
+            </div>
+            <div style="margin: 10px 0;">
+                <label style="cursor: pointer; font-weight: bold;"><input type="checkbox" id="vehiculoCheck"> ¿Ingresa en Vehículo?</label>
+                <input type="text" id="placaInput" placeholder="PLACA (ABC-123)" style="display: none; width: 100%; margin-top: 10px; text-transform: uppercase; font-weight: bold; text-align: center; padding: 10px;">
+            </div>
+        </div>
+
         <div class="form-group">
-          <label>Observaciones</label>
-          <input type="text" id="obsInput" placeholder="Ej: Viene a trasteo..." style="padding: 8px;" />
+          <label>Observaciones:</label>
+          <input type="text" id="obsInput" placeholder="Notas adicionales..." style="padding: 10px;" />
         </div>
-        <div class="form-group" style="align-items: flex-start;">
-          <label>Acompañantes:</label>
-          <input type="number" id="acompInput" value="0" min="0" max="100" style="width: 80px; text-align: center; font-weight: bold; padding: 8px;" />
-        </div>
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; width: 100%; max-width: 400px; text-align: left;">
-          <label style="cursor: pointer; font-size: 1.1em">
-            <input type="checkbox" id="vehiculoCheck" style="transform: scale(1.3); margin-right: 8px" />
-            <strong>¿Ingresa en vehículo?</strong>
-          </label><br />
-          <input type="text" id="placaInput" placeholder="PLACA (Ej: ABC-123)" style="display: none; width: 100%; margin-top: 10px; text-transform: uppercase; font-weight: bold; text-align: center; padding: 8px;" />
-        </div>
-        <div style="margin-top: 10px;">
-          <button id="btnGuardar" class="btn-verde btn-w200">Registrar Ingreso</button>
-          <button id="btnCancelar" class="btn-danger btn-w200">Cancelar</button>
+        
+        <div style="margin-top: 20px;">
+          <button id="btnGuardar" class="btn-verde btn-w200" style="padding: 15px; font-size: 1.2em;">Finalizar Registro ✅</button>
+          <button id="btnCancelarGlobal" class="btn-danger btn-w200">Cancelar Todo</button>
         </div>
       </div>
     </div>
 
     <div id="resultado" style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
-      <h3 style="margin-top: 0;">Último ingreso procesado:</h3>
-      <p id="info-registro" style="font-size: 18px; color: #333">Esperando primer registro del turno...</p>
+      <p id="info-registro" style="font-size: 1.1em; color: #555; background: #fff; padding: 15px; border-radius: 8px;">Esperando registro...</p>
     </div>
 
     <script>
-      const nomBloque = "{{ session.get('nom_bloque', 'Unidad') }}";
-      const nomUnidad = "{{ session.get('nom_unidad', 'Subunidad') }}";
-      const selectUnidad = document.getElementById("unidadSelect");
-      const selectSubunidad = document.getElementById("subunidadSelect");
-      const selectTipoDoc = document.getElementById("tipoDocSelect");
-      const infoRegistro = document.getElementById("info-registro");
-      const pasoEscaner = document.getElementById("paso-escaner");
-      const inputEscaner = document.getElementById("escanerInput");
-      const pasoApto = document.getElementById("paso-apto");
-      const comText = document.getElementById("comText");
-
-      let tramaTemporal = "";
-      let esIngresoManual = false;
-      let documentoFinal = "";
-      let nombreFinal = "";
-
-      // --- LÓGICA WEB SERIAL (PUERTO COM) ---
-      let puerto;
-      let lector;
-
-      async function conectarLectorCOM() {
-        try {
-          puerto = await navigator.serial.requestPort();
-          await puerto.open({ baudRate: 9600 });
-          
-          comText.innerText = "✅ Lector Conectado y Listo (COM)";
-          comText.style.color = "#28a745";
-          inputEscaner.placeholder = "Escáner activo. Pase la cédula...";
-          inputEscaner.style.cursor = "text";
-
-          const decoder = new TextDecoderStream();
-          puerto.readable.pipeTo(decoder.writable);
-          lector = decoder.readable.getReader();
-
-          escucharLector();
-        } catch (err) {
-          console.error("Error al conectar puerto serial:", err);
-          alert("No se pudo conectar el escáner. Asegúrate de seleccionarlo en la lista y dar permisos.");
-        }
-      }
-
-      async function escucharLector() {
-        let buffer = "";
-        while (true) {
-          const { value, done } = await lector.read();
-          if (done) break;
-          if (value) {
-            buffer += value;
-            if (buffer.includes('\r') || buffer.includes('\n')) {
-                let limpia = buffer.replace(/\x00/g, " ");
-                limpia = limpia.replace(/[\x01-\x1F\x7F-\x9F]/g, "");
-                limpia = limpia.replace(/\s+/g, " ").trim();
-
-                if (limpia !== "") {
-                    procesarEntradaEscaner(limpia);
-                }
-                buffer = "";
-            }
-          }
-        }
-      }
-
-      function procesarEntradaEscaner(trama) {
-          tramaTemporal = trama;
-          inputEscaner.value = trama;
-          pasoEscaner.style.display = "none";
-          pasoApto.style.display = "block";
-          setTimeout(() => selectUnidad.focus(), 150);
-      }
-
-      comText.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
-      inputEscaner.addEventListener("click", () => { if (!puerto) conectarLectorCOM(); });
-
-      async function intentarAutoConexion() {
-        if ("serial" in navigator) {
-          try {
-            const ports = await navigator.serial.getPorts();
-            if (ports.length > 0) {
-              puerto = ports[0];
-              await puerto.open({ baudRate: 9600 });
-              
-              comText.innerText = "✅ Lector Auto-Conectado (COM)";
-              comText.style.color = "#28a745";
-              inputEscaner.placeholder = "Escáner activo. Pase la cédula...";
-              inputEscaner.style.cursor = "text";
-
-              const decoder = new TextDecoderStream();
-              puerto.readable.pipeTo(decoder.writable);
-              lector = decoder.readable.getReader();
-
-              console.log("🚀 Escáner re-conectado automáticamente");
-              escucharLector();
-            }
-          } catch (err) {
-            console.error("No se pudo auto-conectar:", err);
-          }
-        }
-      }
-
-      // 🛠️ ACTUALIZACIÓN 2: Fetch usando url_for a las APIs
-      function cargarUnidades() {
-        fetch("{{ url_for('api.obtener_unidades') }}").then(res => res.json()).then(data => {
-            selectUnidad.innerHTML = `<option value="">Seleccione ${nomBloque}...</option>`;
-            data.forEach(u => selectUnidad.add(new Option(u.nombre, u.id)));
-        });
-      }
-
-      selectUnidad.addEventListener("change", function () {
-        const unidadId = this.value;
-        selectSubunidad.innerHTML = `<option value="">Cargando ${nomUnidad}s...</option>`;
-        if (!unidadId) { selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`; return; }
-        
-        // Mantenemos esta dinámica porque enviar el ID en JavaScript es más fácil así:
-        fetch(`/api/subunidades/${unidadId}`).then(res => res.json()).then(data => {
-            selectSubunidad.innerHTML = `<option value="">Seleccione ${nomUnidad}...</option>`;
-            data.forEach(s => selectSubunidad.add(new Option(s.nombre, s.nombre)));
-        });
-      });
-
-      const btnModoManual = document.getElementById("btnModoManual");
-      const pasoDatosManuales = document.getElementById("paso-datos-manuales");
-      const docManualInput = document.getElementById("docManualInput");
-      const nombreManualInput = document.getElementById("nombreManualInput");
-      const btnContinuarManual = document.getElementById("btnContinuarManual");
-      const btnCancelarManual = document.getElementById("btnCancelarManual");
-      const btnGuardar = document.getElementById("btnGuardar");
-
-      btnModoManual.addEventListener("click", function () {
-        esIngresoManual = true; 
-        pasoEscaner.style.display = "none"; 
-        pasoDatosManuales.style.display = "block"; 
-        docManualInput.value = inputEscaner.value.trim();
-        docManualInput.value === "" ? docManualInput.focus() : nombreManualInput.focus();
-      });
-
-      btnCancelarManual.addEventListener("click", reiniciarPantalla);
-
-      btnContinuarManual.addEventListener("click", function () {
-        documentoFinal = docManualInput.value.trim();
-        nombreFinal = nombreManualInput.value.trim().toUpperCase(); 
-        if (documentoFinal === "" || nombreFinal === "") {
-          alert("⚠️ Por favor, completa el documento y el nombre.");
-          return;
-        }
-        pasoDatosManuales.style.display = "none";
-        pasoApto.style.display = "block";
-      });
-
-      inputEscaner.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          if (inputEscaner.value.trim() !== "") {
-              procesarEntradaEscaner(inputEscaner.value);
-          }
-        }
-      });
-
-      btnGuardar.addEventListener("click", function () {
-          if (selectUnidad.value === "" || selectSubunidad.value === "") { 
-              alert(`⚠️ Debes seleccionar ${nomBloque} y ${nomUnidad}.`); 
-              return; 
-          }
-          const vaEnVehiculo = document.getElementById("vehiculoCheck").checked ? 1 : 0;
-          const valorPlaca = document.getElementById("placaInput").value.toUpperCase();
-          if (vaEnVehiculo === 1 && valorPlaca.trim() === "") { 
-              alert("⚠️ Por favor ingresa la placa del vehículo."); 
-              document.getElementById("placaInput").focus(); 
-              return; 
-          }
-
-          if (esIngresoManual && (documentoFinal === "" || nombreFinal === "")) {
-              alert("❌ Los datos se perdieron. Reintente.");
-              reiniciarPantalla();
-              return;
-          }
-
-          btnGuardar.disabled = true;
-          btnGuardar.innerText = "⏳ Guardando...";
-          infoRegistro.innerHTML = "<b>⌛ Procesando en el servidor...</b>";
-
-          const idTipoDocumento = esIngresoManual ? selectTipoDoc.value : 1;
-          
-          const payload = {
-            es_manual: esIngresoManual, 
-            trama: tramaTemporal, 
-            documento_manual: documentoFinal, 
-            nombre_manual: nombreFinal,      
-            tipo_doc_id: idTipoDocumento, 
-            apartamento: `${selectUnidad.options[selectUnidad.selectedIndex].text} - ${selectSubunidad.value}`,
-            vehiculo: vaEnVehiculo, 
-            placa: valorPlaca,
-            observaciones: document.getElementById("obsInput").value,
-            acompanantes: parseInt(document.getElementById('acompInput').value) || 0
-          };
-
-          // 🛠️ ACTUALIZACIÓN 3: Fetch de registro conectado al Blueprint 'visitas'
-          fetch("{{ url_for('visitas.registrar') }}", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-            .then(res => res.json())
-            .then(data => {
-              if (data.mensaje === "ok") {
-                const iconoVehiculo = data.vehiculo === 1 ? "🚗" : "🚶";
-                infoRegistro.innerHTML = `<div style="color: #28a745; font-weight: bold; margin-bottom: 5px;">✅ REGISTRO EXITOSO</div><b>Destino:</b> ${data.apartamento}<br><b>Visitante:</b> ${data.nombre}<br><b>Transporte:</b> ${iconoVehiculo} ${data.placa || "Peatón"}`;
-                reiniciarPantalla();
-              } else { 
-                infoRegistro.innerHTML = `<div style="color: #dc3545;">❌ Error: ${data.error}</div>`; 
-                liberarBotonGuardar();
-              }
-            }).catch(() => {
-                infoRegistro.innerText = "❌ Error crítico de conexión";
-                liberarBotonGuardar();
-            });
-      });
-
-      function liberarBotonGuardar() {
-          btnGuardar.disabled = false;
-          btnGuardar.innerText = "Registrar Ingreso";
-      }
-
-      function reiniciarPantalla() {
-        esIngresoManual = false;
-        documentoFinal = ""; nombreFinal = ""; tramaTemporal = "";
-        docManualInput.value = ""; nombreManualInput.value = ""; inputEscaner.value = "";
-        
-        selectUnidad.selectedIndex = 0;
-        selectSubunidad.innerHTML = `<option value="">Seleccione ${nomBloque} primero</option>`;
-        document.getElementById("vehiculoCheck").checked = false;
-        document.getElementById("placaInput").value = ""; 
-        document.getElementById("placaInput").style.display = "none";
-        document.getElementById("obsInput").value = ""; 
-        document.getElementById('acompInput').value = "0";
-        
-        liberarBotonGuardar();
-
-        pasoDatosManuales.style.display = "none";
-        pasoApto.style.display = "none"; 
-        pasoEscaner.style.display = "block";
-        
-        setTimeout(() => inputEscaner.focus(), 150);
-      }
-
-      document.getElementById("btnCancelar").addEventListener("click", reiniciarPantalla);
-
-      document.getElementById("vehiculoCheck").addEventListener("change", function () {
-        const placa = document.getElementById("placaInput");
-        placa.style.display = this.checked ? "block" : "none";
-        if(this.checked) placa.focus();
-      });
-
-      window.addEventListener('DOMContentLoaded', () => {
-          cargarUnidades();
-          intentarAutoConexion();
-      });
+      const AppConfig = {
+        nomBloque: "{{ session.get('nom_bloque', 'Bloque') }}",
+        nomUnidad: "{{ session.get('nom_unidad', 'Unidad') }}",
+        urlApiUnidades: "{{ url_for('api.obtener_unidades') }}",
+        urlRegistrar: "{{ url_for('visitas.registrar') }}",
+        urlRegistrarPaquete: "{{ url_for('visitas.registrar_paquete') }}"
+      };
     </script>
+    <script src="{{ url_for('static', filename='js/porteria.js') }}?v=3"></script>
   </body>
 </html>

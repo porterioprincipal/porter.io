@@ -3,78 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Visitas - Portería</title>
+    <title>Historial Central - Portería Pro</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .tabs-container { margin-bottom: 20px; border-bottom: 2px solid #ddd; display: flex; gap: 10px; }
+        .tab-btn { padding: 12px 25px; border: none; background: #f8f9fa; cursor: pointer; font-weight: bold; border-radius: 8px 8px 0 0; }
+        .tab-btn.active { background: #28a745; color: white; }
+        .tab-btn-pkg.active { background: #17a2b8; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Ajuste de Tablas para evitar Scroll excesivo */
+        .table-wrapper { overflow-x: auto; background: white; border-radius: 8px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9em; vertical-align: middle; }
+        .col-obs { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Paginación */
+        .paginacion { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }
+        .page-btn { padding: 5px 12px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+        .page-btn.active { background: #28a745; color: white; border-color: #28a745; }
+
+        /* Entrega de Paquetes */
+        .form-entrega { display: flex; gap: 5px; align-items: center; }
+        .input-receptor { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.8em; width: 120px; }
+        
+        /* Modal y Miniatura de Fotos */
+        .img-preview { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ddd; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
+        .modal-content { margin: auto; display: block; max-width: 90%; max-height: 80%; margin-top: 50px; border: 3px solid white; border-radius: 8px; }
+    </style>
 </head>
 <body class="body-estandar">
-
     <div class="container container-large">
-        <a href="{{ url_for('visitas.index') }}" class="btn-volver">⬅️ Volver al Escáner</a>
-        <h1 class="titulo-verde">📋 Historial Central de Ingresos</h1>
-        <p style="color: #666; margin-top: -10px; margin-bottom: 20px;">
-            Conjunto: <strong>{{ session.get('nom_cliente', 'Actual') }}</strong> | Turno: <strong>{{ session.get('turno_guardado') }}</strong>
-        </p>
+        <a href="{{ url_for('visitas.index') }}" class="btn-volver">⬅️ Volver a Portería</a>
+        <h1>📋 Historial de Movimientos</h1>
         
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha y Hora</th>
-                        <th>Documento</th>
-                        <th>Visitante</th>
-                        <th>Destino</th>
-                        <th>Acomp.</th>
-                        <th>Transporte</th>
-                        <th>Observaciones</th>
-                        <th>Portero Registró</th>
-                        {% if session.get('rol') == 'administrador' %}<th>Acciones</th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in registros %}
-                    <tr>
-                        <td>{{ r.fecha_hora }}</td>
-                        <td><span class="doc-sigla">{{ r.tipo_sigla or 'CC' }}</span> <strong>{{ r.numero_documento }}</strong></td>
-                        <td>{{ r.nombre_completo }}</td>
-                        <td><strong>{{ r.apartamento }}</strong></td>
-                        <td style="text-align: center;">{{ r.acompanantes }}</td>
-                        <td>
-                            {% if r.vehiculo == 1 %}<span class="badge badge-vehiculo">🚗 {{ r.placa }}</span>
-                            {% else %}<span class="badge badge-peaton">🚶 Peatón</span>{% endif %}
-                        </td>
-                        <td style="max-width: 200px; word-wrap: break-word;">{{ r.observaciones or '---' }}</td>
-                        <td>{{ r.portero }}</td>
-                        
-                        {% if session.get('rol') == 'administrador' %}
-                        <td>
-                            <form action="{{ url_for('visitas.anular_visita', id=r.id) }}" method="POST" onsubmit="return solicitarMotivo(this);" style="margin: 0;">
-                                <input type="hidden" name="motivo" class="input-motivo">
-                                <button type="submit" class="btn-anular" title="Anular este registro">🚫 Anular</button>
-                            </form>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="{% if session.get('rol') == 'administrador' %}9{% else %}8{% endif %}" class="empty-state">
-                            No hay registros activos de visitas.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-visitas')">🚶 Visitas</button>
+            <button class="tab-btn tab-btn-pkg" onclick="openTab(event, 'tab-paquetes')">📦 Paquetes</button>
+        </div>
+
+        <div id="tab-visitas" class="tab-content active">
+            <div class="table-wrapper">
+                <table id="tablaVisitas">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Tipo</th>
+                            <th>Visitante</th>
+                            <th>Destino</th>
+                            <th>Transporte</th>
+                            <th class="col-obs">Obs.</th>
+                            <th>Portero</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in registros_visitas %}
+                        <tr>
+                            <td><small>{{ r.fecha_hora }}</small></td>
+                            <td><small>{{ r.tipo_visita or 'Social' }}</small></td>
+                            <td><strong>{{ r.nombre_completo }}</strong><br><small>{{ r.numero_documento }}</small></td>
+                            <td>{{ r.apartamento }}</td>
+                            <td>{% if r.vehiculo == 1 %}🚗 {{ r.placa }}{% else %}🚶{% endif %}</td>
+                            <td class="col-obs" title="{{ r.observaciones }}">{{ r.observaciones or '---' }}</td>
+                            <td><small>{{ r.portero }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagerVisitas" class="paginacion"></div>
+        </div>
+
+        <div id="tab-paquetes" class="tab-content">
+            
+            <div style="margin-bottom: 15px; background: #e9ecef; padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                <label style="font-weight: bold; color: #333;">🔍 Buscar Paquete (Casa/Apto):</label>
+                <input type="text" id="filtroApto" placeholder="Ej: Torre 1 - 201" 
+                       style="padding: 8px; width: 250px; border-radius: 5px; border: 1px solid #ccc; outline: none;"
+                       onkeyup="filtrarPorApto()">
+                <small style="color: #666;">Filtra automáticamente en la página actual.</small>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="tablaPaquetes">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora Recibido</th>
+                            <th>Empresa / Repartidor</th>
+                            <th>Destino</th>
+                            <th>Foto</th>
+                            <th>Estado / Detalles de Entrega</th>
+                            <th>Portero (Recibió)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in registros_paquetes %}
+                        <tr class="fila-paquete">
+                            <td><small>{{ p.fecha_hora }}</small></td>
+                            <td><strong>{{ p.empresa_envio }}</strong><br><small>{{ p.repartidor or '---' }}</small></td>
+                            <td class="apto-destino"><strong>{{ p.apartamento }}</strong></td>
+                            
+                            <td>
+                                {% if p.foto_path %}
+                                <img src="{{ url_for('static', filename='uploads/paquetes/' + p.foto_path) }}" class="img-preview" onclick="showModal(this.src)" title="Ver foto">
+                                {% else %}
+                                <small style="color: #999;">Sin foto</small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if p.estado == 'En Portería' %}
+                                <form action="{{ url_for('visitas.entregar_paquete', id=p.id) }}" method="POST" class="form-entrega">
+                                    <input type="text" name="quien_reclama" placeholder="Nombre de quien reclama" required class="input-receptor">
+                                    <button type="submit" class="btn-verde" style="padding: 5px 12px; font-size: 0.85em; font-weight: bold;">Entregar</button>
+                                </form>
+                                {% else %}
+                                    <div style="background: #e8f5e9; padding: 8px; border-radius: 5px; border-left: 4px solid #28a745;">
+                                        <div style="color: #155724; font-weight: bold; margin-bottom: 3px;">✅ ENTREGADO</div>
+                                        <div style="font-size: 0.85em; color: #333; line-height: 1.4;">
+                                            <span>Reclamó: <strong>{{ p.receptor or 'No registrado' }}</strong></span><br>
+                                            <span>El: {{ p.fecha_entrega or '---' }}</span><br>
+                                            <span style="color: #666;">Por: {{ p.portero_entrega or '---' }}</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ p.portero }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagerPaquetes" class="paginacion"></div>
         </div>
     </div>
 
+    <div id="myModal" class="modal">
+        <span style="position:absolute; top:20px; right:35px; color:white; font-size:40px; cursor:pointer;" onclick="document.getElementById('myModal').style.display='none'">&times;</span>
+        <img class="modal-content" id="imgFull">
+    </div>
+
     <script>
-        function solicitarMotivo(form) {
-            let motivo = prompt("⚠️ Vas a anular este registro.\nPor favor, ingresa el motivo de la anulación:");
-            if (motivo && motivo.trim() !== "") {
-                form.querySelector('.input-motivo').value = motivo; return true;
-            } else {
-                alert("❌ Operación cancelada. Debes ingresar un motivo válido para anular un registro."); return false;
-            }
+        // 1. Pestañas
+        function openTab(evt, tabName) {
+            let i, content, links;
+            content = document.getElementsByClassName("tab-content");
+            for (i = 0; i < content.length; i++) content[i].style.display = "none";
+            links = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < links.length; i++) links[i].className = links[i].className.replace(" active", "");
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
         }
+
+        // 2. Buscador de Apartamentos
+        function filtrarPorApto() {
+            let input = document.getElementById("filtroApto").value.toUpperCase();
+            let filas = document.querySelectorAll(".fila-paquete");
+            
+            filas.forEach(fila => {
+                let textoApto = fila.querySelector(".apto-destino").innerText.toUpperCase();
+                // Si la búsqueda coincide, muestra la fila; si no, la oculta
+                fila.style.display = textoApto.includes(input) ? "" : "none";
+            });
+        }
+
+        // 3. Modal de Fotos
+        function showModal(src) {
+            document.getElementById("myModal").style.display = "block";
+            document.getElementById("imgFull").src = src;
+        }
+
+        // 4. Paginación Simple
+        function paginate(tableId, pagerId, rowsPerPage) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            const pager = document.getElementById(pagerId);
+            const pageCount = Math.ceil(rows.length / rowsPerPage);
+
+            if (pageCount <= 1) return;
+
+            function showPage(page) {
+                // Al cambiar de página, limpiamos el filtro del buscador para evitar conflictos visuales
+                if(tableId === 'tablaPaquetes') {
+                    document.getElementById("filtroApto").value = "";
+                }
+
+                rows.forEach((row, i) => {
+                    row.style.display = (i >= (page-1) * rowsPerPage && i < page * rowsPerPage) ? "" : "none";
+                });
+                pager.querySelectorAll("button").forEach((btn, i) => {
+                    btn.className = (i === page-1) ? "page-btn active" : "page-btn";
+                });
+            }
+
+            for (let i = 1; i <= pageCount; i++) {
+                const btn = document.createElement("button");
+                btn.innerText = i;
+                btn.className = "page-btn";
+                btn.onclick = () => showPage(i);
+                pager.appendChild(btn);
+            }
+            showPage(1);
+        }
+
+        // Inicialización
+        window.onload = () => {
+            paginate("tablaVisitas", "pagerVisitas", 10);
+            paginate("tablaPaquetes", "pagerPaquetes", 10);
+        };
     </script>
 </body>
 </html>
