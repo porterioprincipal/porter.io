@@ -31,9 +31,25 @@ def registrar():
             tipo_doc_id = datos.get('tipo_doc_id', 1)
         else:
             trama = datos.get('trama', '')
+            
+            # 1. Extraer el Nombre
             match_nom = re.search(r'([A-ZÑ\s]{12,})', trama)
             nombre = re.sub(r'\s+', ' ', match_nom.group(1).strip()) if match_nom else "VISITANTE"
-            numero_doc = "000" # Lógica de extracción simplificada para el ejemplo
+            
+            # 2. Extraer la Cédula (Lógica oficial PDF417 Colombia)
+            # Busca todos los números pegados inmediatamente antes del bloque de letras
+            match_doc = re.search(r'(\d+)(?=[A-ZÑ]{5,})', trama)
+            
+            if match_doc:
+                bloque_numeros = match_doc.group(1)
+                # Tomamos solo los últimos 10 caracteres (el estándar de longitud en Colombia) 
+                # y le quitamos los ceros a la izquierda (por si es una cédula antigua de 8 dígitos)
+                numero_doc = bloque_numeros[-10:].lstrip('0')
+            else:
+                # Plan B de emergencia extrema
+                solo_numeros = "".join(re.findall(r'\d+', trama))
+                numero_doc = solo_numeros.lstrip('0')[:10] if solo_numeros else "000"
+                
             tipo_doc_id = 1
         
         conexion = get_db_connection()
@@ -45,7 +61,7 @@ def registrar():
         conexion.commit()
         conexion.close()
         
-        # 👇 AQUÍ ESTÁ LA CORRECCIÓN: Ahora enviamos el vehículo y la placa de regreso a la vista
+        # Enviamos todos los datos de vuelta a JavaScript (incluyendo vehículo y placa)
         return jsonify({
             "mensaje": "ok", 
             "nombre": nombre, 
@@ -59,9 +75,13 @@ def registrar():
 @visitas_bp.route('/registrar_paquete', methods=['POST'])
 def registrar_paquete():
     if 'usuario' not in session: return jsonify({'error': 'No autorizado'}), 401
+    
     d = request.json
     foto_base64 = d.get('foto', '')
+    detalle_paq = d.get('detalle', '') # Extraemos el nuevo campo de detalle
     nombre_foto = ""
+    
+    # La foto ahora es opcional
     if foto_base64:
         nombre_foto = f"pkg_{uuid.uuid4().hex}.jpg"
         with open(os.path.join(UPLOAD_FOLDER, nombre_foto), "wb") as fh:
@@ -69,12 +89,16 @@ def registrar_paquete():
     
     conexion = get_db_connection()
     hora = datetime.now(bogota_tz).strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Insertamos incluyendo el detalle_paquete
     conexion.execute('''INSERT INTO recepciones 
-        (fecha_hora, nit_conjunto, portero, apartamento, empresa_envio, repartidor, foto_path, estado) 
-        VALUES (?,?,?,?,?,?,?,'En Portería')''', 
-        (hora, session['nit_conjunto'], session['usuario'], d['apartamento'], d['empresa'], d['repartidor'], nombre_foto))
+        (fecha_hora, nit_conjunto, portero, apartamento, empresa_envio, repartidor, detalle_paquete, foto_path, estado) 
+        VALUES (?,?,?,?,?,?,?,?,'En Portería')''', 
+        (hora, session['nit_conjunto'], session['usuario'], d['apartamento'], d['empresa'], d['repartidor'], detalle_paq, nombre_foto))
+    
     conexion.commit()
     conexion.close()
+    
     return jsonify({
             "mensaje": "ok", 
             "empresa": d.get('empresa', ''), 
@@ -108,7 +132,20 @@ def entregar_paquete(id):
 def historial():
     if 'usuario' not in session: return redirect(url_for('auth.login'))
     conexion = get_db_connection()
-    visitas = conexion.execute("SELECT v.*, t.sigla as tipo_sigla FROM visitas v LEFT JOIN tipos_documento t ON v.tipo_doc_id = t.id WHERE v.nit_conjunto = ? ORDER BY v.fecha_hora DESC", (session['nit_conjunto'],)).fetchall()
-    paquetes = conexion.execute("SELECT * FROM recepciones WHERE nit_conjunto = ? ORDER BY fecha_hora DESC", (session['nit_conjunto'],)).fetchall()
+    
+    visitas = conexion.execute('''
+        SELECT v.*, t.sigla as tipo_sigla 
+        FROM visitas v 
+        LEFT JOIN tipos_documento t ON v.tipo_doc_id = t.id 
+        WHERE v.nit_conjunto = ? 
+        ORDER BY v.fecha_hora DESC
+    ''', (session['nit_conjunto'],)).fetchall()
+    
+    paquetes = conexion.execute('''
+        SELECT * FROM recepciones 
+        WHERE nit_conjunto = ? 
+        ORDER BY fecha_hora DESC
+    ''', (session['nit_conjunto'],)).fetchall()
+    
     conexion.close()
     return render_template('historial.html', registros_visitas=visitas, registros_paquetes=paquetes)

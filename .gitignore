@@ -8,3 +8,6 @@ __pycache__/
 
 # Variables de entorno (claves secretas futuras)
 .env
+
+# Archivos de imágenes e subidas
+static/uploads/

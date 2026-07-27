@@ -118,9 +118,9 @@ document.getElementById("btnContinuarPaquete").addEventListener("click", () => {
     if (!document.getElementById("empresaPaquete").value.trim()) {
         return alert("⚠️ Por favor, ingresa la Empresa de Mensajería.");
     }
-    if (!fotoCapturadaBase64) {
+   /* if (!fotoCapturadaBase64) {
         return alert("📸 Debes tomarle una foto al paquete o la guía.");
-    }
+    }*/
     zonaPaquete.style.display = "none";
     pasoApto.style.display = "block";
 });
@@ -266,12 +266,13 @@ btnGuardar.addEventListener("click", function () {
     // --- RUTA A: GUARDAR PAQUETE ---
     if (modoActual === 'paquete') {
         const payloadPaquete = {
-            empresa: document.getElementById("empresaPaquete").value,
-            repartidor: document.getElementById("repartidorPaquete").value,
-            foto: fotoCapturadaBase64,
-            apartamento: aptoFinalStr,
-            observaciones: obsStr
-        };
+    empresa: document.getElementById("empresaPaquete").value,
+    repartidor: document.getElementById("repartidorPaquete").value,
+    detalle: document.getElementById("detallePaquete").value,
+    foto: fotoCapturadaBase64,
+    apartamento: aptoFinalStr,
+    observaciones: obsStr
+};
 
         fetch(AppConfig.urlRegistrarPaquete, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payloadPaquete) })
           .then(res => res.json())
