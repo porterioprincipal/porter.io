@@ -1,11 +1,15 @@
 import os
 import pytz
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 # Configuración Base
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "porteria.db")
-SECRET_KEY = 'super_secreta_y_segura_jose_saas_v2'
+SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-default-solo-para-local')
 
 # Zona Horaria
 bogota_tz = pytz.timezone('America/Bogota')

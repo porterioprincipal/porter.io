@@ -11,3 +11,7 @@ __pycache__/
 
 # Archivos de imágenes e subidas
 static/uploads/
+
+# Virtual environment
+venv/
+ENV/
