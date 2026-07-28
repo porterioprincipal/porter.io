@@ -1,5 +1,6 @@
 from flask import Flask, request, session, redirect, url_for
 from datetime import datetime
+from flask_wtf.csrf import CSRFProtect
 from config import SECRET_KEY, bogota_tz, obtener_turno_actual
 from db import get_db_connection
 
@@ -14,6 +15,8 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
+csrf = CSRFProtect(app)
 
 # Registramos los módulos
 app.register_blueprint(auth_bp)

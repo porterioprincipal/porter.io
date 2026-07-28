@@ -16,6 +16,7 @@
         {% endif %}
 
         <form method="POST" action="{{ url_for('auth.login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label>Usuario:</label>
                 <input type="text" name="usuario" placeholder="Ej: j.perez" required autofocus>

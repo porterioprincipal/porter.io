@@ -116,6 +116,7 @@
                             <td>
                                 {% if p.estado == 'En Portería' %}
                                 <form action="{{ url_for('visitas.entregar_paquete', id=p.id) }}" method="POST" class="form-entrega">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <input type="text" name="quien_reclama" placeholder="Nombre de quien reclama" required class="input-receptor">
                                     <button type="submit" class="btn-verde" style="padding: 5px 12px; font-size: 0.85em; font-weight: bold;">Entregar</button>
                                 </form>

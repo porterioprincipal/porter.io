@@ -7,6 +7,9 @@ const infoRegistro = document.getElementById("info-registro");
 const pasoApto = document.getElementById("paso-apto");
 const btnGuardar = document.getElementById("btnGuardar");
 
+// Variable CSRF Token para peticiones AJAX
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
 // Modo de operación actual
 let modoActual = 'visitante'; 
 
@@ -266,15 +269,22 @@ btnGuardar.addEventListener("click", function () {
     // --- RUTA A: GUARDAR PAQUETE ---
     if (modoActual === 'paquete') {
         const payloadPaquete = {
-    empresa: document.getElementById("empresaPaquete").value,
-    repartidor: document.getElementById("repartidorPaquete").value,
-    detalle: document.getElementById("detallePaquete").value,
-    foto: fotoCapturadaBase64,
-    apartamento: aptoFinalStr,
-    observaciones: obsStr
-};
+            empresa: document.getElementById("empresaPaquete").value,
+            repartidor: document.getElementById("repartidorPaquete").value,
+            detalle: document.getElementById("detallePaquete").value,
+            foto: fotoCapturadaBase64,
+            apartamento: aptoFinalStr,
+            observaciones: obsStr
+        };
 
-        fetch(AppConfig.urlRegistrarPaquete, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payloadPaquete) })
+        fetch(AppConfig.urlRegistrarPaquete, { 
+            method: "POST", 
+            headers: { 
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            }, 
+            body: JSON.stringify(payloadPaquete) 
+        })
           .then(res => res.json())
           .then(data => {
             if (data.mensaje === "ok") {
@@ -322,7 +332,14 @@ btnGuardar.addEventListener("click", function () {
           acompanantes: parseInt(document.getElementById('acompInput').value) || 0
         };
 
-        fetch(AppConfig.urlRegistrar, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payloadVisitante) })
+        fetch(AppConfig.urlRegistrar, { 
+            method: "POST", 
+            headers: { 
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            }, 
+            body: JSON.stringify(payloadVisitante) 
+        })
           .then(res => res.json())
           .then(data => {
             if (data.mensaje === "ok") {

@@ -16,6 +16,7 @@
     <div class="panel-seccion bg-azul">
         <h3>➕ 1. Registrar Nuevo Cliente</h3>
         <form action="{{ url_for('superadmin.agregar_conjunto') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group-inline"><label>NIT:</label><input type="text" name="nit" required placeholder="Ej: 900123456-1"></div>
             <div class="form-group-inline"><label>Nombre del Conjunto:</label><input type="text" name="nombre" required placeholder="Ej: Torres del Sol"></div>
             <div class="form-group-inline"><label>Fecha Vencimiento:</label><input type="date" name="fecha" required></div>
@@ -28,6 +29,7 @@
     <div class="panel-seccion bg-amarillo">
         <h3>🔑 2. Crear Primer Administrador</h3>
         <form action="{{ url_for('superadmin.superadmin_crear_admin') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group-inline">
                 <label>Conjunto:</label>
                 <select name="nit_conjunto" required>
@@ -51,6 +53,7 @@
             {% for c in conjuntos %}
             <tr class="{% if c.bloqueado == 1 or c.fecha_vencimiento < hoy %}fila-suspendida{% endif %}">
                 <form action="{{ url_for('superadmin.actualizar_conjunto', id=c.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" name="nit_viejo" value="{{ c.nit }}">
                     <td><input type="text" name="nit" value="{{ c.nit }}" style="width: 110px;"></td>
                     <td><input type="text" name="nombre" value="{{ c.nombre_cliente }}" style="width: 180px;"></td>
@@ -88,6 +91,7 @@
                     <td>{% if usr.activo == 1 %}<span class="text-success-small">● Activo</span>{% else %}<span class="error">● Inactivo</span>{% endif %}</td>
                     <td>
                         <form action="{{ url_for('superadmin.superadmin_reset_password', id=usr.id) }}" method="POST" class="form-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <input type="text" name="nueva_password" placeholder="Nueva clave" required class="input-small">
                             <button type="submit" class="btn-azul btn-small" onclick="return confirm('¿Cambiar contraseña de {{ usr.username }}?')">🔄 Reset</button>
                         </form>
