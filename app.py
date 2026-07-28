@@ -13,6 +13,8 @@ from routes.api import api_bp
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
 # Registramos los módulos
 app.register_blueprint(auth_bp)
 app.register_blueprint(superadmin_bp)
