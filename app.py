@@ -2,7 +2,7 @@ from flask import Flask, request, session, redirect, url_for
 from datetime import datetime
 from flask_wtf.csrf import CSRFProtect
 from config import SECRET_KEY, bogota_tz, obtener_turno_actual
-from db import get_db_connection
+from db import get_db_context
 
 # Importamos los Blueprints
 from routes.auth import auth_bp
@@ -37,9 +37,8 @@ def revision_global():
     if 'usuario' not in session or 'nit_conjunto' not in session:
         return redirect(url_for('auth.login'))
 
-    conexion = get_db_connection()
-    cliente = conexion.execute("SELECT fecha_vencimiento, bloqueado FROM control_pago WHERE nit = ?", (session['nit_conjunto'],)).fetchone()
-    conexion.close()
+    with get_db_context() as conexion:
+        cliente = conexion.execute("SELECT fecha_vencimiento, bloqueado FROM control_pago WHERE nit = ?", (session['nit_conjunto'],)).fetchone()
 
     if not cliente: return redirect(url_for('auth.login', error="Conjunto no registrado."))
     
