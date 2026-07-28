@@ -74,10 +74,19 @@ def registrar_paquete():
     detalle_paq = d.get('detalle', '')
     nombre_foto = ""
     
+    # Validación y guardado de foto
     if foto_base64:
+        # Validar que sea un formato de imagen permitido (JPEG, PNG, WEBP)
+        if not re.match(r'^data:image/(jpeg|png|jpg|webp);base64,', foto_base64):
+            return jsonify({'error': 'El archivo enviado no es un formato de imagen válido.'}), 400
+            
         nombre_foto = f"pkg_{uuid.uuid4().hex}.jpg"
-        with open(os.path.join(UPLOAD_FOLDER, nombre_foto), "wb") as fh:
-            fh.write(base64.b64decode(foto_base64.split(',')[1] if ',' in foto_base64 else foto_base64))
+        try:
+            datos_limpios = foto_base64.split(',')[1] if ',' in foto_base64 else foto_base64
+            with open(os.path.join(UPLOAD_FOLDER, nombre_foto), "wb") as fh:
+                fh.write(base64.b64decode(datos_limpios))
+        except Exception:
+            return jsonify({'error': 'Error al procesar la imagen enviada.'}), 400
     
     hora = datetime.now(bogota_tz).strftime('%Y-%m-%d %H:%M:%S')
     
