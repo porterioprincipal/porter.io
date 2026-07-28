@@ -16,6 +16,12 @@ app.secret_key = SECRET_KEY
 
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
+# Configuración de Seguridad en Cookies de Sesión
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# En desarrollo local (HTTP) va False, en producción con HTTPS cambiará a True via env
+app.config['SESSION_COOKIE_SECURE'] = False
+
 csrf = CSRFProtect(app)
 
 # Registramos los módulos
