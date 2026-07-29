@@ -10,7 +10,8 @@ __pycache__/
 .env
 
 # Archivos de imágenes e subidas
-static/uploads/
+static/uploads/*
+!static/uploads/.gitkeep
 
 # Virtual environment
 venv/
